@@ -1,0 +1,36 @@
+networks:
+  default:
+    name: monokube
+    driver: bridge
+services:
+  core:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+      target: release
+    container_name: monokube-core
+    expose:
+      - 8000
+    read_only: true
+    restart: always
+    volumes:
+      - static:/app/static:ro
+  nginx:
+    container_name: monokube-nginx
+    depends_on:
+      - core
+    image: nginx:1.27.0-alpine
+    ports:
+      - "0.0.0.0:8000:80"
+    read_only: true
+    restart: always
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    volumes:
+      - .nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - .nginx/proxy_params:/etc/nginx/proxy_params:ro
+      - static:/app/static:ro
+
+volumes:
+  static:
