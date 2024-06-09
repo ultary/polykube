@@ -5,7 +5,10 @@ name = "pypi"
 
 [packages]
 django = "~=5.0"
+django-htmx = "~=1.17"
 hypercorn = "~=0.17"
+kubernetes = "~=30.1"
+PyYAML = "~=6.0.1"
 
 [dev-packages]
 
