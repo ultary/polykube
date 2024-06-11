@@ -12,12 +12,12 @@
 # go install github.com/wasilibs/go-protoc-gen-grpc/cmd/protoc-gen-grpc_python@v1.64.2
 
 protoc \
-  --proto_path . \
+  --proto_path ./kluster \
   --go_opt paths=source_relative \
-  --go_out ./api/grpc/v1 \
+  --go_out ./kluster \
   --go-grpc_opt paths=source_relative \
-  --go-grpc_out ./api/grpc/v1 \
-  --python_out ../core \
-  --pyi_out ../core \
-  --grpc_python_out ../core \
+  --go-grpc_out ./kluster \
+  --python_out ./core \
+  --pyi_out ./core \
+  --grpc_python_out ./core \
   api/grpc/v1/system.proto
