@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+from os import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,7 +41,7 @@ INSTALLED_APPS = [
     # django-htmx
     'django_htmx',
     # MonoKube
-    'apps.mgmt',
+    'apps.kluster',
 ]
 
 MIDDLEWARE = [
@@ -81,8 +82,11 @@ WSGI_APPLICATION = 'monokube.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'HOST': environ.get('PG_HOST', 'localhost'),
+        'PORT': environ.get('PG_PORT', '5432'),
+        'USER': environ.get('PG_USERNAME', 'postgres'),
+        'PASSWORD': environ.get('PG_PASSWORD', 'postgrespw'),
     }
 }
 

@@ -23,7 +23,8 @@ func main() {
 		server := grpc.NewServer()
 		v1.RegisterSystemServiceServer(server, &System{})
 
-		lis, err := net.Listen("tcp4", "127.0.0.1:50051")
+		//lis, err := net.Listen("tcp4", "127.0.0.1:50051")
+		lis, err := net.Listen("unix", "/tmp/kluster.sock")
 		if err != nil {
 			log.Fatalf("failed to listen: %v", err)
 		}

@@ -1,0 +1,64 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        cors:
+          allowed_headers: ["*"]
+          allowed_origins: ["*"]
+        endpoint: 0.0.0.0:4318
+        include_metadata: true
+
+processors:
+  batch:
+
+exporters:
+  kafka/logs:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_logs
+    producer:
+      max_message_bytes: 8388608 # 8MB
+      compression: lz4
+  kafka/metrics:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_metrics
+    producer:
+      max_message_bytes: 8388608 # 8MB
+      compression: lz4
+  kafka/traces:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_spans
+    producer:
+      max_message_bytes: 8388608 # 8MB
+      compression: lz4
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+service:
+  extensions: [ health_check, pprof, zpages ]
+  pipelines:
+    logs:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ kafka/logs ]
+    metrics:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ kafka/metrics ]
+    traces:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ kafka/traces ]
+  telemetry:
+    logs:
+      level: WARN

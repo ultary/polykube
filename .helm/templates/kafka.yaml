@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  labels:
+    app: kafka
+spec:
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: kafka
+  serviceName: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: kafka
+          image: {{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}
+          env:
+            - name: CLUSTER_ID
+              value: '4L6g3nShT-eMCtK--X86sw'
+            - name: KAFKA_NODE_ID
+              value: '1'
+            - name: KAFKA_PROCESS_ROLES
+              value: 'broker,controller'
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: 'PLAINTEXT'
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: 'CONTROLLER'
+            - name: KAFKA_LISTENERS
+              value: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: 'PLAINTEXT://kafka-0.kafka.monokube.svc.cluster.local:9092'
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: '1@localhost:9093'
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: 'false'
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: '1'
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: '0'
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: '1'
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: '1'
+            - name: KAFKA_LOG_DIRS
+              value: '/var/lib/kafka/data'
+            - name: KAFKA_LOG_RETENTION_MS
+              value: '600000'
+            - name: KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS
+              value: '60000'
+            - name: KAFKA_LOG4J_ROOT_LOGLEVEL
+              value: WARN
+            - name: KAFKA_LOG4J_LOGGERS
+              value: >
+                kafka=WARN,
+                kafka.producer.async.DefaultEventHandler=WARN,
+                kafka.controller=WARN,
+                kafka.log.LogCleaner=WARN,
+                state.change.logger=WARN
+          livenessProbe:
+            exec:
+              command: [ "kafka-cluster", "cluster-id", "--bootstrap-server", "localhost:9092" ]
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 60
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+            - containerPort: 9092
+              name: broker
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kafka
+            - name: data
+              mountPath: /var/lib/kafka/data
+            - name: logs
+              mountPath: /var/log
+        - name: kafka-ui
+          image: {{ .Values.kafka.ui.image.repository }}:{{ .Values.kafka.ui.image.tag }}
+          env:
+            - name: LOGGING_LEVEL_ROOT
+              value: warn
+            - name: LOGGING_LEVEL_COM_PROVECTUS
+              value: warn
+            - name: KAFKA_CLUSTERS_0_NAME
+              value: monokube
+            - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+              value: 'localhost:9092'
+            - name: KAFKA_CLUSTERS_0_READONLY
+              value: 'true'
+          livenessProbe:
+            exec:
+              command: [ "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/ui/actuator/health" ]
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 60
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            readOnlyRootFilesystem: true
+      volumes:
+        - name: config
+          emptyDir:
+            sizeLimit: 32Ki
+        - name: logs
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ 'ReadWriteOnce' ]
+        #storageClassName: hostpath
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels:
+    app: kafka
+spec:
+  clusterIP: None
+  ports:
+    - name: broker
+      port: 9092
+    - name: controller
+      port: 9093
+    - name: http
+      port: 8080
+  selector:
+    app: kafka
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kafka
+spec:
+  gateways:
+    - monokube
+  hosts:
+    - kafka.{{ .Values.domains.root }}
+  http:
+    - route:
+        - destination:
+            host: kafka
+            port:
+              number: 8080
+---

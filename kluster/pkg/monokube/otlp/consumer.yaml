@@ -1,0 +1,63 @@
+receivers:
+  kafka/logs:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_logs
+  kafka/metrics:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_metrics
+  kafka/traces:
+    protocol_version: "3.6.2"
+    brokers:
+      - kafka.kafka-0.monokube.svc.cluster.local:9092
+    topic: otlp_spans
+
+processors:
+  batch:
+
+exporters:
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    headers:
+      X-Scope-OrgID: home
+  prometheusremotewrite:
+    endpoint: http://mimir:9009/api/v1/push
+    tls:
+      insecure: true
+    headers:
+      X-Scope-OrgID: home
+    resource_to_telemetry_conversion:
+      enabled: true
+  otlp:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+    headers:
+      X-Scope-OrgID: home
+
+extensions:
+  health_check:
+  pprof:
+  zpages:
+
+service:
+  extensions: [ health_check, pprof, zpages ]
+  pipelines:
+    logs:
+      receivers: [ kafka/logs ]
+      processors: [ batch ]
+      exporters: [ otlphttp/loki ]
+    metrics:
+      receivers: [ kafka/metrics ]
+      processors: [ batch ]
+      exporters: [ prometheusremotewrite ]
+    traces:
+      receivers: [ kafka/traces ]
+      processors: [ batch ]
+      exporters: [ otlp ]
+  telemetry:
+    logs:
+      level: WARN

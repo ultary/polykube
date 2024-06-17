@@ -1,0 +1,44 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monokube
+spec:
+  secretName: monokube-https-tls
+  dnsNames:
+    - kafka.{{ .Values.domains.root }}
+    - minio.{{ .Values.domains.root }}
+  issuerRef:
+    name: aws-route53
+    kind: ClusterIssuer
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: monokube
+  annotations:
+    external-dns.kubernetes.io/private: 'true'
+    #external-dns.kubernetes.io/public: 'true'
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - kafka.{{ .Values.domains.root }}
+        - minio.{{ .Values.domains.root }}
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+    - hosts:
+        - kafka.{{ .Values.domains.root }}
+        - minio.{{ .Values.domains.root }}
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: monokube-https-tls
+        mode: SIMPLE
+---

@@ -1,0 +1,44 @@
+fullnameOverride: otel-collector
+
+mode: deployment
+
+image:
+  repository: otel/opentelemetry-collector-k8s
+  tag: 0.102.1
+
+replicaCount: 1
+
+presets:
+  kubernetesEvents:
+    enabled: true
+  clusterMetrics:
+    enabled: true
+
+config:
+  exporters:
+    otlp:
+      endpoint: otlp.dokevy.io:4317
+      tls:
+        insecure: true
+  processors:
+    attributes:
+      actions:
+        - action: insert
+          key: opentelemetry
+          value: deployment
+  receivers:
+    jaeger:
+    otlp:
+    prometheus:
+    zipkin:
+  service:
+    pipelines:
+      logs:
+        exporters:
+          - otlp
+      traces:
+        exporters:
+          - otlp
+    telemetry:
+      logs:
+        level: warn
