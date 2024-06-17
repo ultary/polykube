@@ -12,7 +12,12 @@ import (
 func main() {
 
 	ctx := k8s.NewContext(context.Background())
-	monokube.Install(ctx)
+	path := os.Getenv("")
+	if path == "" {
+		path = "/Users/ghilbut/work/workbench/ultary/monokube/.helm"
+	}
+	namespace := "monokube"
+	monokube.Install(ctx, path, namespace)
 
 	os.Exit(0)
 

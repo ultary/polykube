@@ -1,4 +1,4 @@
-package repo
+package helm
 
 import (
 	"bytes"
@@ -15,16 +15,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type Manifests struct {
+type Chart struct {
 	manifests    map[string]map[string][]byte
 	dependencies map[string]*chart.Dependency
 	values       map[string]interface{}
 }
 
-func NewManifests(chartPath string) *Manifests {
+func NewChart(chartPath string, namespace string) *Chart {
 
 	releaseName := "monokube"
-	namespace := "monokube"
 	valuesFile := filepath.Join(chartPath, "values.yaml")
 
 	// Load the chart
@@ -63,7 +62,7 @@ func NewManifests(chartPath string) *Manifests {
 		os.Exit(1)
 	}
 
-	manifests := &Manifests{
+	manifests := &Chart{
 		manifests: make(map[string]map[string][]byte),
 		values:    vals,
 	}
@@ -91,8 +90,8 @@ func NewManifests(chartPath string) *Manifests {
 	return manifests
 }
 
-func (m *Manifests) Get(kind, name string) []byte {
-	step1, ok := m.manifests[kind]
+func (c *Chart) Get(kind, name string) []byte {
+	step1, ok := c.manifests[kind]
 	if !ok {
 		return nil
 	}
@@ -103,17 +102,17 @@ func (m *Manifests) Get(kind, name string) []byte {
 	return step2
 }
 
-func (m *Manifests) Set(kind, name string, manifest []byte) {
+func (c *Chart) Set(kind, name string, manifest []byte) {
 	if manifest == nil {
 		log.Fatal("manifest is empty value")
 	}
 	if check := strings.TrimSpace(string(manifest)); check == "" {
 		log.Fatal("manifest is empty value")
 	}
-	if m.manifests[kind] == nil {
-		m.manifests[kind] = make(map[string][]byte)
+	if c.manifests[kind] == nil {
+		c.manifests[kind] = make(map[string][]byte)
 	}
-	m.manifests[kind][name] = manifest
+	c.manifests[kind][name] = manifest
 }
 
 func readValuesFile(valuesFile string) (map[string]interface{}, error) {

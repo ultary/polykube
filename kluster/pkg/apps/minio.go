@@ -10,8 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
+	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/repo"
 	"ultary.co/kluster/pkg/utils"
 )
 
@@ -22,26 +22,26 @@ type MinIO struct {
 	vsv    istio.VirtualService
 }
 
-func NewMinIO(manifests *repo.Manifests) (retval MinIO) {
+func NewMinIO(chart *helm.Chart) (retval MinIO) {
 
 	const name = "minio"
 
-	m := manifests.Get("Secret", name)
+	m := chart.Get("Secret", name)
 	if err := yaml.Unmarshal(m, &retval.secret); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Secret: %v", err)
 	}
 
-	m = manifests.Get("StatefulSet", name)
+	m = chart.Get("StatefulSet", name)
 	if err := yaml.Unmarshal(m, &retval.sts); err != nil {
 		log.Fatalf("Error unmarshalling YAML to StatefulSet: %v", err)
 	}
 
-	m = manifests.Get("Service", name)
+	m = chart.Get("Service", name)
 	if err := yaml.Unmarshal(m, &retval.sv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Service: %v", err)
 	}
 
-	m = manifests.Get("VirtualService", name)
+	m = chart.Get("VirtualService", name)
 	if err := yaml.Unmarshal(m, &retval.vsv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to VirtualService: %v", err)
 	}

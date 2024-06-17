@@ -6,8 +6,8 @@ import (
 	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"sigs.k8s.io/yaml"
 
+	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/repo"
 )
 
 type Gateway struct {
@@ -15,16 +15,16 @@ type Gateway struct {
 	gateway     istio.Gateway
 }
 
-func NewGateway(manifests *repo.Manifests) (retval Gateway) {
+func NewGateway(chart *helm.Chart) (retval Gateway) {
 
 	const name = "monokube"
 
-	m := manifests.Get("Certificate", name)
+	m := chart.Get("Certificate", name)
 	if err := yaml.Unmarshal(m, &retval.certificate); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Certificate: %v", err)
 	}
 
-	m = manifests.Get("Gateway", name)
+	m = chart.Get("Gateway", name)
 	if err := yaml.Unmarshal(m, &retval.gateway); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Gateway: %v", err)
 	}

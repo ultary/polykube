@@ -1,14 +1,16 @@
 package apps
 
 import (
+	"errors"
+
 	log "github.com/sirupsen/logrus"
 	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
+	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/repo"
 )
 
 type Kafka struct {
@@ -17,21 +19,21 @@ type Kafka struct {
 	vsv istio.VirtualService
 }
 
-func NewKafka(manifests *repo.Manifests) (retval Kafka) {
+func NewKafka(chart *helm.Chart) (retval Kafka) {
 
 	const name = "kafka"
 
-	m := manifests.Get("StatefulSet", name)
+	m := chart.Get("StatefulSet", name)
 	if err := yaml.Unmarshal(m, &retval.sts); err != nil {
 		log.Fatalf("Error unmarshalling YAML to StatefulSet: %v", err)
 	}
 
-	m = manifests.Get("Service", name)
+	m = chart.Get("Service", name)
 	if err := yaml.Unmarshal(m, &retval.sv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Service: %v", err)
 	}
 
-	m = manifests.Get("VirtualService", name)
+	m = chart.Get("VirtualService", name)
 	if err := yaml.Unmarshal(m, &retval.vsv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to VirtualService: %v", err)
 	}
@@ -53,5 +55,39 @@ func (k *Kafka) Apply(ctx k8s.Context, namespace string) error {
 		log.Fatalf("Error applying Kafka VirtualService: %v", err)
 	}
 
+	return nil
+}
+
+func CreateTopic(ctx k8s.Context, topic string) error {
+
+	const (
+		namespace     = "monokube"
+		podName       = "kafka-0"
+		containerName = "kafka"
+	)
+
+	command := []string{
+		"kafka-topics",
+		"--bootstrap-server",
+		"localhost:9092",
+		"--create",
+		"--if-not-exists",
+		"--partitions",
+		"2",
+		"--replication-factor",
+		"1",
+		"--topic",
+		topic,
+	}
+
+	stdout, stderr, err := k8s.Exec(ctx, namespace, podName, containerName, command)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if stderr != "" {
+		return errors.New(stderr)
+	}
+
+	log.Info(stdout)
 	return nil
 }

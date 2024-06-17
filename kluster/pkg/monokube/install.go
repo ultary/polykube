@@ -1,30 +1,28 @@
 package monokube
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
+
 	"ultary.co/kluster/pkg/apps"
+	"ultary.co/kluster/pkg/apps/net"
+	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/net"
-	"ultary.co/kluster/pkg/repo"
 )
 
-func Install(ctx k8s.Context) {
-
-	const namespace = "monokube"
-	const chartPath = "/Users/ghilbut/work/workbench/ultary/monokube/.helm"
+func Install(ctx k8s.Context, chartPath, namespace string) {
 
 	if err := k8s.ApplyNamespace(ctx, namespace); err != nil {
 		log.Fatalf("error creating Namespace: %v", err)
 	}
 
-	manifests := repo.NewManifests(chartPath)
+	chart := helm.NewChart(chartPath, namespace)
 
-	gateway := net.NewGateway(manifests)
-	kafka := apps.NewKafka(manifests)
-	minio := apps.NewMinIO(manifests)
-	postgres := apps.NewPostgreSQL(manifests)
+	gateway := net.NewGateway(chart)
+	kafka := apps.NewKafka(chart)
+	minio := apps.NewMinIO(chart)
+	postgres := apps.NewPostgreSQL(chart)
 
-	resources := []k8s.Resource{
+	resources := []apps.Resource{
 		&gateway,
 		&kafka,
 		&minio,
@@ -35,7 +33,6 @@ func Install(ctx k8s.Context) {
 		r.Apply(ctx, namespace)
 	}
 
-	// kafka.Apply(ctx, client, manifests)
 	// for _, topic := range [...]string{"otlp_logs", "otlp_metrics", "otlp_spans"} {
 	// 	if err := kafka.CreateTopic(ctx, client, topic); err != nil {
 	// 		log.Fatalf("Kafka topic(%s) creation failed: %v", topic, err)
