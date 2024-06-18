@@ -5,6 +5,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/discovery"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -15,7 +18,9 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -28,6 +33,7 @@ type Context interface {
 	context.Context
 	Config() *rest.Config
 	KubernetesClientset() *kubernetes.Clientset
+	DynamicClient() *dynamic.DynamicClient
 	CertManagerClientset() *certmanagerversioned.Clientset
 	IstioClientset() *istioversioned.Clientset
 }
@@ -36,6 +42,7 @@ type contextImpl struct {
 	base   context.Context
 	config *rest.Config
 	k      *kubernetes.Clientset
+	d      *dynamic.DynamicClient
 	c      *certmanagerversioned.Clientset
 	i      *istioversioned.Clientset
 }
@@ -74,6 +81,11 @@ func NewContext(ctx context.Context) Context {
 	// Kubernetes 클라이언트 생성
 	if retval.k, err = kubernetes.NewForConfig(retval.config); err != nil {
 		log.Fatalf("Error creating Kubernetes client: %v", err)
+	}
+
+	// Dynamic 클라이언트 생성
+	if retval.d, err = dynamic.NewForConfig(retval.config); err != nil {
+		log.Fatalf("Error creating dynamic client: %v", err)
 	}
 
 	// Cert-Manager 클라이언트 생성
@@ -117,6 +129,10 @@ func (c *contextImpl) KubernetesClientset() *kubernetes.Clientset {
 	return c.k
 }
 
+func (c *contextImpl) DynamicClient() *dynamic.DynamicClient {
+	return c.d
+}
+
 func (c *contextImpl) CertManagerClientset() *certmanagerversioned.Clientset {
 	return c.c
 }
@@ -127,7 +143,7 @@ func (c *contextImpl) IstioClientset() *istioversioned.Clientset {
 
 ////////////////////////////////////////////////////////////////
 //
-//
+//  Pod shell execution
 //
 
 func Exec(ctx Context, namespace, podName, containerName string, command []string) (string, string, error) {
@@ -176,7 +192,7 @@ func Exec(ctx Context, namespace, podName, containerName string, command []strin
 
 ////////////////////////////////////////////////////////////////
 //
-//  Manifests API
+//  Apply (create or update) manifests
 //
 
 func ApplyNamespace(ctx Context, name string) (err error) {
@@ -184,12 +200,12 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 	client := ctx.KubernetesClientset()
 
 	namespace := &core.Namespace{
-		ObjectMeta: meta.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 	}
 
-	result, err := client.CoreV1().Namespaces().Update(ctx, namespace, meta.UpdateOptions{})
+	result, err := client.CoreV1().Namespaces().Update(ctx, namespace, metav1.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -199,7 +215,7 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 		return
 	}
 
-	result, err = client.CoreV1().Namespaces().Create(ctx, namespace, meta.CreateOptions{})
+	result, err = client.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -222,7 +238,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 	}
 
 	var result *apps.Deployment
-	result, err = client.AppsV1().Deployments(namespace).Update(ctx, deployment, meta.UpdateOptions{})
+	result, err = client.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -232,7 +248,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 		return
 	}
 
-	result, err = client.AppsV1().Deployments(namespace).Create(ctx, deployment, meta.CreateOptions{})
+	result, err = client.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -253,7 +269,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 	}
 
 	var result *apps.StatefulSet
-	result, err = client.AppsV1().StatefulSets(namespace).Update(ctx, statefulSet, meta.UpdateOptions{})
+	result, err = client.AppsV1().StatefulSets(namespace).Update(ctx, statefulSet, metav1.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -263,7 +279,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 		return
 	}
 
-	result, err = client.AppsV1().StatefulSets(namespace).Create(ctx, statefulSet, meta.CreateOptions{})
+	result, err = client.AppsV1().StatefulSets(namespace).Create(ctx, statefulSet, metav1.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -286,7 +302,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 	}
 
 	var result *core.ConfigMap
-	result, err = client.CoreV1().ConfigMaps(namespace).Update(ctx, configmap, meta.UpdateOptions{})
+	result, err = client.CoreV1().ConfigMaps(namespace).Update(ctx, configmap, metav1.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -296,7 +312,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 		return
 	}
 
-	result, err = client.CoreV1().ConfigMaps(namespace).Create(ctx, configmap, meta.CreateOptions{})
+	result, err = client.CoreV1().ConfigMaps(namespace).Create(ctx, configmap, metav1.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -310,7 +326,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 
 func GetSecret(ctx Context, name, namespace string) (*core.Secret, error) {
 	client := ctx.KubernetesClientset()
-	return client.CoreV1().Secrets(namespace).Get(ctx, name, meta.GetOptions{})
+	return client.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func CreateSecret(ctx Context, namespace string, secret *core.Secret) (*core.Secret, error) {
@@ -318,7 +334,7 @@ func CreateSecret(ctx Context, namespace string, secret *core.Secret) (*core.Sec
 		namespace = secret.Namespace
 	}
 	client := ctx.KubernetesClientset()
-	return client.CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
+	return client.CoreV1().Secrets(namespace).Create(ctx, secret, metav1.CreateOptions{})
 }
 
 // ---- Network ----
@@ -332,7 +348,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 	}
 
 	var result *core.Service
-	result, err = client.CoreV1().Services(namespace).Update(ctx, service, meta.UpdateOptions{})
+	result, err = client.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -342,7 +358,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 		return
 	}
 
-	result, err = client.CoreV1().Services(namespace).Create(ctx, service, meta.CreateOptions{})
+	result, err = client.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -355,3 +371,73 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 }
 
 // ---- Storage ----
+
+// ---- Unstructured ----
+
+func ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, namespace string) (err error) {
+
+	client := ctx.DynamicClient()
+
+	gvk := obj.GroupVersionKind()
+	gvr, _ := meta.UnsafeGuessKindToResource(gvk)
+
+	var rc dynamic.ResourceInterface
+	rc = client.Resource(gvr)
+
+	if isNamespaced(ctx, gvk) {
+		if n := obj.GetNamespace(); n != "" {
+			namespace = n
+		}
+		rc = rc.(dynamic.NamespaceableResourceInterface).Namespace(namespace)
+	}
+
+	opts := metav1.ApplyOptions{
+		FieldManager: "None",
+	}
+	if _, err = rc.Apply(ctx, obj.GetName(), obj, opts); err != nil {
+		log.Errorf("Failed to apply resource: %v", err)
+		return err
+	}
+
+	_, err = rc.Update(ctx, obj, metav1.UpdateOptions{})
+	if err == nil {
+		return nil
+	}
+	if !errors.IsNotFound(err) {
+		log.Errorf("Failed to update resource: %v", err)
+		return err
+	}
+
+	_, err = rc.Create(ctx, obj, metav1.CreateOptions{})
+	if err != nil {
+		log.Errorf("Failed to create resource: %v", err)
+		return err
+	}
+
+	log.Infof("Successfully applied resource: %s/%s\n", gvr.Resource, obj.GetName())
+	return nil
+}
+
+func isNamespaced(ctx Context, gvk schema.GroupVersionKind) bool {
+
+	config := ctx.Config()
+	client, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		log.Fatalf("Failed to create discovery client: %v", err)
+	}
+
+	version := gvk.GroupVersion().String()
+	apiResourceList, err := client.ServerResourcesForGroupVersion(version)
+	if err != nil {
+		log.Fatalf("Failed to get server resources for group version: %v", err)
+	}
+
+	for _, apiResource := range apiResourceList.APIResources {
+		if apiResource.Kind == gvk.Kind {
+			return apiResource.Namespaced
+		}
+	}
+
+	log.Fatalf("Can not find resource definition %v", gvk)
+	return false
+}

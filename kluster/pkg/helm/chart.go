@@ -1,151 +1,82 @@
 package helm
 
 import (
-	"bytes"
-	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/engine"
+	"helm.sh/helm/v3/pkg/cli"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/yaml"
+
+	"ultary.co/kluster/pkg/k8s"
+	"ultary.co/kluster/pkg/utils"
 )
 
 type Chart struct {
-	manifests    map[string]map[string][]byte
-	dependencies map[string]*chart.Dependency
-	values       map[string]interface{}
+	chart.Dependency
+	values map[string]interface{}
+	objs   []*unstructured.Unstructured
 }
 
-func NewChart(chartPath string, namespace string) *Chart {
+func NewChart(dependency *chart.Dependency, values map[string]interface{}, namespace string) *Chart {
 
-	releaseName := "monokube"
-	valuesFile := filepath.Join(chartPath, "values.yaml")
+	retval := &Chart{
+		Dependency: *dependency,
+		values:     values,
+	}
 
-	// Load the chart
+	settings := cli.New()
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
+		log.Fatalf("Failed to initialize Helm action configuration: %v", err)
+	}
+
+	client := action.NewInstall(actionConfig)
+	client.DryRun = true
+	client.ClientOnly = true
+	client.Namespace = namespace
+	client.ReleaseName = dependency.Name
+	client.ChartPathOptions.RepoURL = dependency.Repository
+	client.ChartPathOptions.Version = dependency.Version
+
+	chartPath, err := client.ChartPathOptions.LocateChart(dependency.Name, settings)
+	if err != nil {
+		log.Fatalf("Failed to locate chart: %v", err)
+	}
+
 	chartRequested, err := loader.Load(chartPath)
 	if err != nil {
-		log.Fatalf("Error loading chart: %v\n", err)
+		log.Fatalf("Failed to load chart: %v", err)
 	}
 
-	// Load values file if provided
-	vals := map[string]interface{}{}
-	if valuesFile != "" {
-		vals, err = readValuesFile(valuesFile)
-		if err != nil {
-			fmt.Printf("Error reading values file: %v\n", err)
-			os.Exit(1)
+	release, err := client.Run(chartRequested, values)
+	if err != nil {
+		log.Fatalf("Failed to render chart: %v", err)
+	}
+
+	manifests := utils.SplitYAML([]byte(release.Manifest))
+	retval.objs = make([]*unstructured.Unstructured, len(manifests), len(manifests))
+	for i, m := range manifests {
+
+		var raw map[string]interface{}
+		if err := yaml.Unmarshal(m, &raw); err != nil {
+			log.Fatalf("Failed to unmarshal YAML: %v", err)
+		}
+
+		retval.objs[i] = &unstructured.Unstructured{Object: raw}
+	}
+
+	return retval
+}
+
+func (c *Chart) Apply(ctx k8s.Context, namespace string) error {
+	for _, obj := range c.objs {
+		if err := k8s.ApplyUnstructured(ctx, obj, namespace); err != nil {
+			log.Fatalf("Error applying unstructed manifest in dependency: %v", err)
 		}
 	}
-
-	////////////////////////////////////////////////////////////////
-	//  Render
-
-	// Create a rendering environment
-	valuesToRender, err := chartutil.ToRenderValues(chartRequested, vals, chartutil.ReleaseOptions{
-		Name:      releaseName,
-		Namespace: namespace,
-	}, nil)
-	if err != nil {
-		fmt.Printf("Error creating render values: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Render the chart
-	rendered, err := engine.Render(chartRequested, valuesToRender)
-	if err != nil {
-		fmt.Printf("Error rendering chart: %v\n", err)
-		os.Exit(1)
-	}
-
-	manifests := &Chart{
-		manifests: make(map[string]map[string][]byte),
-		values:    vals,
-	}
-
-	// Print the rendered templates
-	for _, content := range rendered {
-		blocks := SplitYAML([]byte(content))
-		for _, block := range blocks {
-			var m KubernetesManifest
-			yaml.Unmarshal(block, &m)
-			manifests.Set(m.Kind, m.Metadata.Name, block)
-		}
-	}
-
-	////////////////////////////////////////////////////////////////
-	//  Dependencies
-
-	dependencies := make(map[string]*chart.Dependency)
-	for _, d := range chartRequested.Metadata.Dependencies {
-		dependencies[d.Alias] = d
-	}
-
-	manifests.dependencies = dependencies
-
-	return manifests
-}
-
-func (c *Chart) Get(kind, name string) []byte {
-	step1, ok := c.manifests[kind]
-	if !ok {
-		return nil
-	}
-	step2, ok := step1[name]
-	if !ok {
-		return nil
-	}
-	return step2
-}
-
-func (c *Chart) Set(kind, name string, manifest []byte) {
-	if manifest == nil {
-		log.Fatal("manifest is empty value")
-	}
-	if check := strings.TrimSpace(string(manifest)); check == "" {
-		log.Fatal("manifest is empty value")
-	}
-	if c.manifests[kind] == nil {
-		c.manifests[kind] = make(map[string][]byte)
-	}
-	c.manifests[kind][name] = manifest
-}
-
-func readValuesFile(valuesFile string) (map[string]interface{}, error) {
-	bytes, err := os.ReadFile(valuesFile)
-	if err != nil {
-		return nil, err
-	}
-
-	vals := map[string]interface{}{}
-	if err := yaml.Unmarshal(bytes, &vals); err != nil {
-		return nil, err
-	}
-
-	return vals, nil
-}
-
-func SplitYAML(data []byte) [][]byte {
-	var parts [][]byte
-	docs := bytes.Split(data, []byte("\n---\n"))
-	for _, doc := range docs {
-		trimmed := bytes.TrimSpace(doc)
-		if len(trimmed) > 0 {
-			parts = append(parts, trimmed)
-		}
-	}
-	return parts
-}
-
-type KubernetesManifest struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Name      string `yaml:"name"`
-		Namespace string `yaml:"namespace"`
-	} `yaml:"metadata"`
+	return nil
 }

@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
 	"ultary.co/kluster/pkg/utils"
 )
@@ -20,26 +19,28 @@ type PostgreSQL struct {
 	sv     core.Service
 }
 
-func NewPostgreSQL(chart *helm.Chart) (retval PostgreSQL) {
+func NewPostgreSQL(manifests Manifests) *PostgreSQL {
 
 	const name = "postgres"
 
-	m := chart.Get("Secret", name)
+	var retval PostgreSQL
+
+	m := manifests.Get("Secret", name)
 	if err := yaml.Unmarshal(m, &retval.secret); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Secret: %v", err)
 	}
 
-	m = chart.Get("StatefulSet", name)
+	m = manifests.Get("StatefulSet", name)
 	if err := yaml.Unmarshal(m, &retval.sts); err != nil {
 		log.Fatalf("Error unmarshalling YAML to StatefulSet: %v", err)
 	}
 
-	m = chart.Get("Service", name)
+	m = manifests.Get("Service", name)
 	if err := yaml.Unmarshal(m, &retval.sv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Service: %v", err)
 	}
 
-	return
+	return &retval
 }
 
 func (p *PostgreSQL) Apply(ctx k8s.Context, namespace string) error {

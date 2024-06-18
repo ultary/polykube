@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
 	"ultary.co/kluster/pkg/utils"
 )
@@ -22,31 +21,33 @@ type MinIO struct {
 	vsv    istio.VirtualService
 }
 
-func NewMinIO(chart *helm.Chart) (retval MinIO) {
+func NewMinIO(manifests Manifests) *MinIO {
 
 	const name = "minio"
 
-	m := chart.Get("Secret", name)
+	var retval MinIO
+
+	m := manifests.Get("Secret", name)
 	if err := yaml.Unmarshal(m, &retval.secret); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Secret: %v", err)
 	}
 
-	m = chart.Get("StatefulSet", name)
+	m = manifests.Get("StatefulSet", name)
 	if err := yaml.Unmarshal(m, &retval.sts); err != nil {
 		log.Fatalf("Error unmarshalling YAML to StatefulSet: %v", err)
 	}
 
-	m = chart.Get("Service", name)
+	m = manifests.Get("Service", name)
 	if err := yaml.Unmarshal(m, &retval.sv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Service: %v", err)
 	}
 
-	m = chart.Get("VirtualService", name)
+	m = manifests.Get("VirtualService", name)
 	if err := yaml.Unmarshal(m, &retval.vsv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to VirtualService: %v", err)
 	}
 
-	return
+	return &retval
 }
 
 func (m *MinIO) Apply(ctx k8s.Context, namespace string) error {
@@ -89,4 +90,8 @@ func (m *MinIO) Apply(ctx k8s.Context, namespace string) error {
 	}
 
 	return nil
+}
+
+func (m *MinIO) CreateAccessKey(ctx k8s.Context, name, bucket string) (accessKey, secretKey string, err error) {
+	return "", "", nil
 }

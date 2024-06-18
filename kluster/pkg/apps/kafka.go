@@ -9,7 +9,6 @@ import (
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/helm"
 	"ultary.co/kluster/pkg/k8s"
 )
 
@@ -19,26 +18,28 @@ type Kafka struct {
 	vsv istio.VirtualService
 }
 
-func NewKafka(chart *helm.Chart) (retval Kafka) {
+func NewKafka(manifests Manifests) *Kafka {
 
 	const name = "kafka"
 
-	m := chart.Get("StatefulSet", name)
+	var retval Kafka
+
+	m := manifests.Get("StatefulSet", name)
 	if err := yaml.Unmarshal(m, &retval.sts); err != nil {
 		log.Fatalf("Error unmarshalling YAML to StatefulSet: %v", err)
 	}
 
-	m = chart.Get("Service", name)
+	m = manifests.Get("Service", name)
 	if err := yaml.Unmarshal(m, &retval.sv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to Service: %v", err)
 	}
 
-	m = chart.Get("VirtualService", name)
+	m = manifests.Get("VirtualService", name)
 	if err := yaml.Unmarshal(m, &retval.vsv); err != nil {
 		log.Fatalf("Error unmarshalling YAML to VirtualService: %v", err)
 	}
 
-	return
+	return &retval
 }
 
 func (k *Kafka) Apply(ctx k8s.Context, namespace string) error {
