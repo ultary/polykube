@@ -6,10 +6,12 @@ import (
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/engine"
+	"helm.sh/helm/v3/pkg/cli"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/yaml"
 
 	"ultary.co/kluster/pkg/apps"
@@ -19,7 +21,6 @@ import (
 
 func Parse(chartPath string, namespace string) map[string]apps.Resource {
 
-	releaseName := "monokube"
 	valuesFile := filepath.Join(chartPath, "values.yaml")
 
 	// Load the chart
@@ -30,44 +31,58 @@ func Parse(chartPath string, namespace string) map[string]apps.Resource {
 
 	// Load values file if provided
 	vals := map[string]interface{}{}
-	if valuesFile != "" {
-		vals, err = readValuesFile(valuesFile)
-		if err != nil {
-			fmt.Printf("Error reading values file: %v\n", err)
-			os.Exit(1)
-		}
+	vals, err = readValuesFile(valuesFile)
+	if err != nil {
+		fmt.Printf("Error reading values file: %v\n", err)
+		os.Exit(1)
 	}
 
 	////////////////////////////////////////////////////////////////
 	//  Render
 
-	// Create a rendering environment
-	valuesToRender, err := chartutil.ToRenderValues(chartRequested, vals, chartutil.ReleaseOptions{
-		Name:      releaseName,
-		Namespace: namespace,
-	}, nil)
-	if err != nil {
-		fmt.Printf("Error creating render values: %v\n", err)
-		os.Exit(1)
+	// Helm CLI 환경 설정
+	settings := cli.New()
+
+	// Helm action configuration 초기화
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(
+		genericclioptions.NewConfigFlags(true),
+		settings.Namespace(),
+		os.Getenv("HELM_DRIVER"),
+		func(format string, v ...interface{}) {
+			fmt.Sprintf(format, v...)
+		},
+	); err != nil {
+		log.Fatalf("Error initializing Helm configuration: %v\n", err)
 	}
 
-	// Render the chart
-	rendered, err := engine.Render(chartRequested, valuesToRender)
+	// Helm 설치 작업 설정
+	install := action.NewInstall(actionConfig)
+	install.DryRun = true
+	install.ClientOnly = true
+	install.Namespace = namespace
+	install.ReleaseName = "monokube"
+	install.DependencyUpdate = true
+
+	// Chart를 설치하고 렌더링된 매니페스트 가져오기
+	rel, err := install.Run(chartRequested, vals)
 	if err != nil {
-		fmt.Printf("Error rendering chart: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error running install: %v\n", err)
 	}
+
+	// 렌더링된 매니페스트 출력
+	fmt.Println(rel.Manifest)
 
 	manifests := apps.NewManifests()
 
-	// Print the rendered templates
-	for _, content := range rendered {
-		blocks := utils.SplitYAML([]byte(content))
-		for _, block := range blocks {
-			var m KubernetesManifest
-			yaml.Unmarshal(block, &m)
-			manifests.Set(m.Kind, m.Metadata.Name, block)
+	blocks := utils.SplitYAML([]byte(rel.Manifest))
+	for _, block := range blocks {
+		var raw map[string]interface{}
+		if err := yaml.Unmarshal(block, &raw); err != nil {
+			log.Fatalf("Failed to unmarshal YAML: %v", err)
 		}
+		u := &unstructured.Unstructured{Object: raw}
+		manifests.Set(u.GetKind(), u.GetName(), block)
 	}
 
 	retval := map[string]apps.Resource{
@@ -111,13 +126,4 @@ func readValuesFile(valuesFile string) (map[string]interface{}, error) {
 	}
 
 	return vals, nil
-}
-
-type KubernetesManifest struct {
-	APIVersion string `yaml:"apiVersion"`
-	Kind       string `yaml:"kind"`
-	Metadata   struct {
-		Name      string `yaml:"name"`
-		Namespace string `yaml:"namespace"`
-	} `yaml:"metadata"`
 }
