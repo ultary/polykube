@@ -20,7 +20,7 @@ func Install(ctx k8s.Context, chartPath, namespace string) {
 		resources["kafka"],
 		resources["minio"],
 		resources["postgres"],
-		//resources["otel_agent"],
+		resources["otel_agent"],
 	}
 
 	for _, s := range sequence {

@@ -5,11 +5,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	certmanagerversioned "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
@@ -20,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -33,18 +33,20 @@ type Context interface {
 	context.Context
 	Config() *rest.Config
 	KubernetesClientset() *kubernetes.Clientset
+	DiscoveryClient() *discovery.DiscoveryClient
 	DynamicClient() *dynamic.DynamicClient
 	CertManagerClientset() *certmanagerversioned.Clientset
 	IstioClientset() *istioversioned.Clientset
 }
 
 type contextImpl struct {
-	base   context.Context
-	config *rest.Config
-	k      *kubernetes.Clientset
-	d      *dynamic.DynamicClient
-	c      *certmanagerversioned.Clientset
-	i      *istioversioned.Clientset
+	base                 context.Context
+	config               *rest.Config
+	kubernetesClientset  *kubernetes.Clientset
+	dynamicClient        *dynamic.DynamicClient
+	discoveryClient      *discovery.DiscoveryClient
+	certmanagerClientset *certmanagerversioned.Clientset
+	istioClientset       *istioversioned.Clientset
 }
 
 func NewContext(ctx context.Context) Context {
@@ -79,22 +81,27 @@ func NewContext(ctx context.Context) Context {
 	}
 
 	// Kubernetes 클라이언트 생성
-	if retval.k, err = kubernetes.NewForConfig(retval.config); err != nil {
+	if retval.kubernetesClientset, err = kubernetes.NewForConfig(retval.config); err != nil {
 		log.Fatalf("Error creating Kubernetes client: %v", err)
 	}
 
+	// Discovery 클라이언트 생성
+	if retval.discoveryClient, err = discovery.NewDiscoveryClientForConfig(retval.config); err != nil {
+		log.Fatalf("Error creating discovery client: %v", err)
+	}
+
 	// Dynamic 클라이언트 생성
-	if retval.d, err = dynamic.NewForConfig(retval.config); err != nil {
+	if retval.dynamicClient, err = dynamic.NewForConfig(retval.config); err != nil {
 		log.Fatalf("Error creating dynamic client: %v", err)
 	}
 
 	// Cert-Manager 클라이언트 생성
-	if retval.c, err = certmanagerversioned.NewForConfig(retval.config); err != nil {
+	if retval.certmanagerClientset, err = certmanagerversioned.NewForConfig(retval.config); err != nil {
 		log.Fatalf("Error creating Cert-Manager client: %v\n", err)
 	}
 
 	// Istio 클라이언트 생성
-	if retval.i, err = istioversioned.NewForConfig(retval.config); err != nil {
+	if retval.istioClientset, err = istioversioned.NewForConfig(retval.config); err != nil {
 		log.Fatalf("Error creating Istio client: %v\n", err)
 	}
 
@@ -126,19 +133,23 @@ func (c *contextImpl) Config() *rest.Config {
 }
 
 func (c *contextImpl) KubernetesClientset() *kubernetes.Clientset {
-	return c.k
+	return c.kubernetesClientset
+}
+
+func (c *contextImpl) DiscoveryClient() *discovery.DiscoveryClient {
+	return c.discoveryClient
 }
 
 func (c *contextImpl) DynamicClient() *dynamic.DynamicClient {
-	return c.d
+	return c.dynamicClient
 }
 
 func (c *contextImpl) CertManagerClientset() *certmanagerversioned.Clientset {
-	return c.c
+	return c.certmanagerClientset
 }
 
 func (c *contextImpl) IstioClientset() *istioversioned.Clientset {
-	return c.i
+	return c.istioClientset
 }
 
 ////////////////////////////////////////////////////////////////
@@ -376,15 +387,34 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 
 func ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, namespace string) (err error) {
 
-	client := ctx.DynamicClient()
+	discoveryClient := ctx.DiscoveryClient()
 
 	gvk := obj.GroupVersionKind()
-	gvr, _ := meta.UnsafeGuessKindToResource(gvk)
+
+	gv := gvk.GroupVersion().String()
+	resources, err := discoveryClient.ServerResourcesForGroupVersion(gv)
+	if err != nil {
+		log.Fatalf("Failed to get API resources: %v", err)
+	}
+
+	var gvr schema.GroupVersionResource
+	var isNamespaced bool
+	for _, rc := range resources.APIResources {
+		const suffix = "/status"
+		if rc.Kind == gvk.Kind && !strings.HasSuffix(rc.Name, suffix) {
+			gvr.Group = gvk.Group
+			gvr.Version = gvk.Version
+			gvr.Resource = rc.Name
+			isNamespaced = rc.Namespaced
+		}
+	}
+
+	dynamicClient := ctx.DynamicClient()
 
 	var rc dynamic.ResourceInterface
-	rc = client.Resource(gvr)
+	rc = dynamicClient.Resource(gvr)
 
-	if isNamespaced(ctx, gvk) {
+	if isNamespaced {
 		if n := obj.GetNamespace(); n != "" {
 			namespace = n
 		}
@@ -399,45 +429,6 @@ func ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, namespace st
 		return err
 	}
 
-	_, err = rc.Update(ctx, obj, metav1.UpdateOptions{})
-	if err == nil {
-		return nil
-	}
-	if !errors.IsNotFound(err) {
-		log.Errorf("Failed to update resource: %v", err)
-		return err
-	}
-
-	_, err = rc.Create(ctx, obj, metav1.CreateOptions{})
-	if err != nil {
-		log.Errorf("Failed to create resource: %v", err)
-		return err
-	}
-
 	log.Infof("Successfully applied resource: %s/%s\n", gvr.Resource, obj.GetName())
 	return nil
-}
-
-func isNamespaced(ctx Context, gvk schema.GroupVersionKind) bool {
-
-	config := ctx.Config()
-	client, err := discovery.NewDiscoveryClientForConfig(config)
-	if err != nil {
-		log.Fatalf("Failed to create discovery client: %v", err)
-	}
-
-	version := gvk.GroupVersion().String()
-	apiResourceList, err := client.ServerResourcesForGroupVersion(version)
-	if err != nil {
-		log.Fatalf("Failed to get server resources for group version: %v", err)
-	}
-
-	for _, apiResource := range apiResourceList.APIResources {
-		if apiResource.Kind == gvk.Kind {
-			return apiResource.Namespaced
-		}
-	}
-
-	log.Fatalf("Can not find resource definition %v", gvk)
-	return false
 }

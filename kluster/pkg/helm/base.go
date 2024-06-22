@@ -21,6 +21,7 @@ import (
 
 func Parse(chartPath string, namespace string) map[string]apps.Resource {
 
+	retval := make(map[string]apps.Resource)
 	valuesFile := filepath.Join(chartPath, "values.yaml")
 
 	// Load the chart
@@ -35,6 +36,29 @@ func Parse(chartPath string, namespace string) map[string]apps.Resource {
 	if err != nil {
 		fmt.Printf("Error reading values file: %v\n", err)
 		os.Exit(1)
+	}
+
+	////////////////////////////////////////////////////////////////
+	//  Dependencies
+	//
+	//  NOTE: After render, dependency's chart name will be changed to alias.
+	//        So, loading from remote chart is failed.
+	//        If you want to prevent it, get dependency before render
+
+	dependencies := make(map[string]*chart.Dependency)
+	for _, d := range chartRequested.Metadata.Dependencies {
+		dependencies[d.Alias] = d
+
+		name := d.Name
+		if d.Alias != "" {
+			name = d.Alias
+		}
+		values, ok := vals[name].(map[string]interface{})
+		if !ok {
+			values = map[string]interface{}{}
+		}
+
+		retval[name] = NewChart(d, values, namespace)
 	}
 
 	////////////////////////////////////////////////////////////////
@@ -62,7 +86,6 @@ func Parse(chartPath string, namespace string) map[string]apps.Resource {
 	install.ClientOnly = true
 	install.Namespace = namespace
 	install.ReleaseName = "monokube"
-	install.DependencyUpdate = true
 
 	// Chart를 설치하고 렌더링된 매니페스트 가져오기
 	rel, err := install.Run(chartRequested, vals)
@@ -85,31 +108,10 @@ func Parse(chartPath string, namespace string) map[string]apps.Resource {
 		manifests.Set(u.GetKind(), u.GetName(), block)
 	}
 
-	retval := map[string]apps.Resource{
-		"gateway":  net.NewGateway(manifests),
-		"kafka":    apps.NewKafka(manifests),
-		"minio":    apps.NewMinIO(manifests),
-		"postgres": apps.NewPostgreSQL(manifests),
-	}
-
-	////////////////////////////////////////////////////////////////
-	//  Dependencies
-
-	dependencies := make(map[string]*chart.Dependency)
-	for _, d := range chartRequested.Metadata.Dependencies {
-		dependencies[d.Alias] = d
-
-		name := d.Name
-		if d.Alias != "" {
-			name = d.Alias
-		}
-		values, ok := vals[name].(map[string]interface{})
-		if !ok {
-			values = map[string]interface{}{}
-		}
-
-		retval[name] = NewChart(d, values, namespace)
-	}
+	retval["gateway"] = net.NewGateway(manifests)
+	retval["kafka"] = apps.NewKafka(manifests)
+	retval["minio"] = apps.NewMinIO(manifests)
+	retval["postgres"] = apps.NewPostgreSQL(manifests)
 
 	return retval
 }
