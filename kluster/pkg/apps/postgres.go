@@ -1,8 +1,6 @@
 package apps
 
 import (
-	"net/http"
-
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -51,8 +49,7 @@ func (p *PostgreSQL) Apply(ctx k8s.Context, namespace string) error {
 		result, err := k8s.GetSecret(ctx, name, namespace)
 		if err != nil {
 
-			status := err.(*errors.StatusError).ErrStatus
-			if status.Code != http.StatusNotFound {
+			if !errors.IsNotFound(err) {
 				log.Fatalf("Error getting PostgreSQL Secret: %v", err)
 			}
 

@@ -1,8 +1,6 @@
 package apps
 
 import (
-	"net/http"
-
 	log "github.com/sirupsen/logrus"
 	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
 	apps "k8s.io/api/apps/v1"
@@ -58,8 +56,7 @@ func (m *MinIO) Apply(ctx k8s.Context, namespace string) error {
 		result, err := k8s.GetSecret(ctx, name, namespace)
 		if err != nil {
 
-			status := err.(*errors.StatusError).ErrStatus
-			if status.Code != http.StatusNotFound {
+			if !errors.IsNotFound(err) {
 				log.Fatalf("Error getting MinIO Secret: %v", err)
 			}
 

@@ -221,8 +221,7 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 		log.Debug(result)
 		return
 	}
-	status := err.(*errors.StatusError).ErrStatus
-	if status.Code != http.StatusNotFound {
+	if !errors.IsNotFound(err) {
 		return
 	}
 
@@ -232,7 +231,7 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 		return
 	}
 	if err != nil {
-		panic(err.(*errors.StatusError))
+		log.Fatalf("Failed creating namespace: %v", err)
 	}
 
 	return
@@ -254,8 +253,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 		log.Debug(result)
 		return
 	}
-	e, ok := err.(*errors.StatusError)
-	if !ok || e.Status().Code != http.StatusNotFound {
+	if !errors.IsNotFound(err) {
 		return
 	}
 
@@ -265,7 +263,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 		return
 	}
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Failed creating deployment: %v", err)
 	}
 
 	return
@@ -285,8 +283,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 		log.Debug(result)
 		return
 	}
-	e, ok := err.(*errors.StatusError)
-	if !ok || e.Status().Code != http.StatusNotFound {
+	if !errors.IsNotFound(err) {
 		return
 	}
 
@@ -296,7 +293,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 		return
 	}
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Failed creating statefulset: %v", err)
 	}
 
 	return
@@ -318,8 +315,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 		log.Debug(result)
 		return
 	}
-	e, ok := err.(*errors.StatusError)
-	if !ok || e.Status().Code != http.StatusNotFound {
+	if !errors.IsNotFound(err) {
 		return
 	}
 
@@ -329,7 +325,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 		return
 	}
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Failed createing configmap: %v", err)
 	}
 
 	return
@@ -364,8 +360,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 		log.Debug(result)
 		return
 	}
-	e, ok := err.(*errors.StatusError)
-	if !ok || e.Status().Code != http.StatusNotFound {
+	if !errors.IsNotFound(err) {
 		return
 	}
 
@@ -375,7 +370,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 		return
 	}
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatalf("Failed createing service: %v", err)
 	}
 
 	return

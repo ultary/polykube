@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"net/http"
 	"reflect"
 
 	log "github.com/sirupsen/logrus"
@@ -20,8 +19,7 @@ func ApplyGateway(ctx Context, gateway *istio.Gateway, namespace string) error {
 
 	current, err := client.NetworkingV1beta1().Gateways(namespace).Get(ctx, gateway.Name, meta.GetOptions{})
 	if err != nil {
-		e, ok := err.(*errors.StatusError)
-		if !ok || e.Status().Code != http.StatusNotFound {
+		if !errors.IsNotFound(err) {
 			return err
 		}
 
@@ -57,8 +55,7 @@ func ApplyVirtualService(ctx Context, virtualService *istio.VirtualService, name
 
 	current, err := client.NetworkingV1beta1().VirtualServices(namespace).Get(ctx, virtualService.Name, meta.GetOptions{})
 	if err != nil {
-		e, ok := err.(*errors.StatusError)
-		if !ok || e.Status().Code != http.StatusNotFound {
+		if !errors.IsNotFound(err) {
 			return err
 		}
 

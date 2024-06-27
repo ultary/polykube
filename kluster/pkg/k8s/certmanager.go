@@ -1,7 +1,6 @@
 package k8s
 
 import (
-	"net/http"
 	"reflect"
 
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -20,8 +19,7 @@ func ApplyCertificate(ctx Context, certificate *certmanager.Certificate, namespa
 
 	current, err := client.CertmanagerV1().Certificates(namespace).Get(ctx, certificate.Name, meta.GetOptions{})
 	if err != nil {
-		e, ok := err.(*errors.StatusError)
-		if !ok || e.Status().Code != http.StatusNotFound {
+		if !errors.IsNotFound(err) {
 			return err
 		}
 
