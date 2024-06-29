@@ -2,7 +2,6 @@
 <html data-bs-theme="light" lang="en-US" dir="ltr">
 
 {% load django_htmx %}
-{% load static %}
 
 <head>
     <meta charset="utf-8">
@@ -27,7 +26,8 @@
 <!-- ===============================================-->
 
 <!-- HTMX -->
-<script src="{% static 'js/htmx/1.9.12/htmx.min.js' %}" defer></script>
+<script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/htmx-ext-ws@2.0.0/ws.js"></script>
 {% django_htmx_script %}
 
 <!-- Bootstrap -->
