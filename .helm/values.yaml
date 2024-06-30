@@ -1,3 +1,7 @@
+global:
+  labels:
+    org: home
+
 domains:
   root: mk.dokevy.io
 

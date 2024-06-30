@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/kluster.iml" filepath="$PROJECT_DIR$/kluster.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kluster/kluster.iml" filepath="$PROJECT_DIR$/kluster/kluster.iml" />
       <module fileurl="file://$PROJECT_DIR$/monokube.iml" filepath="$PROJECT_DIR$/monokube.iml" />
     </modules>
   </component>
