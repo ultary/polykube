@@ -4,16 +4,19 @@ metadata:
   name: kafka
   labels:
     app: kafka
+    org: home
 spec:
   minReadySeconds: 10
   selector:
     matchLabels:
       app: kafka
+      org: home
   serviceName: kafka
   template:
     metadata:
       labels:
         app: kafka
+        org: home
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 10
@@ -132,6 +135,7 @@ metadata:
   name: kafka
   labels:
     app: kafka
+    org: home
 spec:
   clusterIP: None
   ports:
@@ -143,6 +147,7 @@ spec:
       port: 8080
   selector:
     app: kafka
+    org: home
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService

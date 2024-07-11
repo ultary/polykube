@@ -15,8 +15,9 @@ import (
 	istioversioned "istio.io/client-go/pkg/clientset/versioned"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/discovery"
@@ -211,12 +212,12 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 	client := ctx.KubernetesClientset()
 
 	namespace := &core.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: meta.ObjectMeta{
 			Name: name,
 		},
 	}
 
-	result, err := client.CoreV1().Namespaces().Update(ctx, namespace, metav1.UpdateOptions{})
+	result, err := client.CoreV1().Namespaces().Update(ctx, namespace, meta.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -225,7 +226,7 @@ func ApplyNamespace(ctx Context, name string) (err error) {
 		return
 	}
 
-	result, err = client.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
+	result, err = client.CoreV1().Namespaces().Create(ctx, namespace, meta.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -248,7 +249,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 	}
 
 	var result *apps.Deployment
-	result, err = client.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
+	result, err = client.AppsV1().Deployments(namespace).Update(ctx, deployment, meta.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -257,7 +258,7 @@ func ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment)
 		return
 	}
 
-	result, err = client.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
+	result, err = client.AppsV1().Deployments(namespace).Create(ctx, deployment, meta.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -278,7 +279,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 	}
 
 	var result *apps.StatefulSet
-	result, err = client.AppsV1().StatefulSets(namespace).Update(ctx, statefulSet, metav1.UpdateOptions{})
+	result, err = client.AppsV1().StatefulSets(namespace).Update(ctx, statefulSet, meta.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -287,7 +288,7 @@ func ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace stri
 		return
 	}
 
-	result, err = client.AppsV1().StatefulSets(namespace).Create(ctx, statefulSet, metav1.CreateOptions{})
+	result, err = client.AppsV1().StatefulSets(namespace).Create(ctx, statefulSet, meta.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -310,7 +311,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 	}
 
 	var result *core.ConfigMap
-	result, err = client.CoreV1().ConfigMaps(namespace).Update(ctx, configmap, metav1.UpdateOptions{})
+	result, err = client.CoreV1().ConfigMaps(namespace).Update(ctx, configmap, meta.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -319,7 +320,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 		return
 	}
 
-	result, err = client.CoreV1().ConfigMaps(namespace).Create(ctx, configmap, metav1.CreateOptions{})
+	result, err = client.CoreV1().ConfigMaps(namespace).Create(ctx, configmap, meta.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -333,7 +334,7 @@ func ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (e
 
 func GetSecret(ctx Context, name, namespace string) (*core.Secret, error) {
 	client := ctx.KubernetesClientset()
-	return client.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
+	return client.CoreV1().Secrets(namespace).Get(ctx, name, meta.GetOptions{})
 }
 
 func CreateSecret(ctx Context, namespace string, secret *core.Secret) (*core.Secret, error) {
@@ -341,7 +342,7 @@ func CreateSecret(ctx Context, namespace string, secret *core.Secret) (*core.Sec
 		namespace = secret.Namespace
 	}
 	client := ctx.KubernetesClientset()
-	return client.CoreV1().Secrets(namespace).Create(ctx, secret, metav1.CreateOptions{})
+	return client.CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
 }
 
 // ---- Network ----
@@ -355,7 +356,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 	}
 
 	var result *core.Service
-	result, err = client.CoreV1().Services(namespace).Update(ctx, service, metav1.UpdateOptions{})
+	result, err = client.CoreV1().Services(namespace).Update(ctx, service, meta.UpdateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -364,7 +365,7 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 		return
 	}
 
-	result, err = client.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{})
+	result, err = client.CoreV1().Services(namespace).Create(ctx, service, meta.CreateOptions{})
 	if err == nil {
 		log.Debug(result)
 		return
@@ -377,6 +378,86 @@ func ApplyService(ctx Context, service *core.Service, namespace string) (err err
 }
 
 // ---- Storage ----
+
+// ---- Access Control ----
+
+func ApplyServiceAccount(ctx Context, sa *core.ServiceAccount, namespace string) (err error) {
+
+	if sa.Namespace != "" {
+		namespace = sa.Namespace
+	}
+
+	client := ctx.KubernetesClientset().CoreV1().ServiceAccounts(namespace)
+
+	_, err = client.Get(ctx, sa.Name, meta.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			log.Errorf("Failed to get ServiceAccount: %v", err)
+			return
+		}
+		if _, err = client.Create(ctx, sa, meta.CreateOptions{}); err != nil {
+			log.Errorf("Failed to create ServiceAccount: %v", err)
+			return
+		}
+
+	}
+
+	// sa.ResourceVersion = current.ResourceVersion
+	if _, err = client.Update(ctx, sa, meta.UpdateOptions{}); err != nil {
+		log.Errorf("Failed to update ServiceAccount: %v", err)
+	}
+
+	return
+}
+
+func ApplyClusterRole(ctx Context, cr *rbac.ClusterRole) (err error) {
+
+	client := ctx.KubernetesClientset().RbacV1().ClusterRoles()
+
+	_, err = client.Get(ctx, cr.Name, meta.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			log.Errorf("Failed to get ClusterRole: %v", err)
+			return
+		}
+		if _, err = client.Create(ctx, cr, meta.CreateOptions{}); err != nil {
+			log.Errorf("Failed to create ClusterRole: %v", err)
+			return
+		}
+
+	}
+
+	// cr.ResourceVersion = current.ResourceVersion
+	if _, err = client.Update(ctx, cr, meta.UpdateOptions{}); err != nil {
+		log.Errorf("Failed to update ClusterRole: %v", err)
+	}
+
+	return
+}
+
+func ApplyClusterRoleBiding(ctx Context, crb *rbac.ClusterRoleBinding) (err error) {
+
+	client := ctx.KubernetesClientset().RbacV1().ClusterRoleBindings()
+
+	_, err = client.Get(ctx, crb.Name, meta.GetOptions{})
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			log.Errorf("Failed to get ClusterRoleBinding: %v", err)
+			return
+		}
+		if _, err = client.Create(ctx, crb, meta.CreateOptions{}); err != nil {
+			log.Errorf("Failed to create ClusterRoleBinding: %v", err)
+			return
+		}
+	}
+
+	// crb.ResourceVersion = current.ResourceVersion
+	if _, err = client.Update(ctx, crb, meta.UpdateOptions{}); err != nil {
+		log.Errorf("Failed to update ClusterRoleBinding: %v", err)
+	}
+
+	return
+}
 
 // ---- Unstructured ----
 
@@ -416,7 +497,7 @@ func ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, namespace st
 		rc = rc.(dynamic.NamespaceableResourceInterface).Namespace(namespace)
 	}
 
-	opts := metav1.ApplyOptions{
+	opts := meta.ApplyOptions{
 		FieldManager: "None",
 	}
 	if _, err = rc.Apply(ctx, obj.GetName(), obj, opts); err != nil {

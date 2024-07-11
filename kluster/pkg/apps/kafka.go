@@ -9,7 +9,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
 )
 
 type Kafka struct {

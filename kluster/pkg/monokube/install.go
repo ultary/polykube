@@ -3,9 +3,9 @@ package monokube
 import (
 	log "github.com/sirupsen/logrus"
 
-	"ultary.co/kluster/pkg/apps"
-	"ultary.co/kluster/pkg/helm"
-	"ultary.co/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/apps"
+	"github.com/ultary/monokube/kluster/pkg/helm"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
 )
 
 func Install(ctx k8s.Context, chartPath, namespace string) {

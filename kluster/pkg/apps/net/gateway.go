@@ -6,8 +6,8 @@ import (
 	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/apps"
-	"ultary.co/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/apps"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
 )
 
 type Gateway struct {

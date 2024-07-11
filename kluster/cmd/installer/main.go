@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/monokube"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/ultary/monokube/kluster/pkg/apps/system/otlp"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/monokube"
 )
 
 func main() {
@@ -18,6 +21,11 @@ func main() {
 	}
 	namespace := "monokube"
 	monokube.Install(ctx, path, namespace)
+
+	if err := otlp.Sync(ctx, "kube-system"); err != nil {
+		log.SetReportCaller(true)
+		log.Fatal(err)
+	}
 
 	os.Exit(0)
 

@@ -5,5 +5,5 @@ from django.shortcuts import render
 
 def index(request):
     context = None
-    template_name = 'k8s/index.html'
+    template_name = 'kluster/index.html'
     return render(request, template_name, context)

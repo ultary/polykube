@@ -7,8 +7,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/k8s"
-	"ultary.co/kluster/pkg/utils"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/utils"
 )
 
 type PostgreSQL struct {

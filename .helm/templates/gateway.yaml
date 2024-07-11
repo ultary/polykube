@@ -2,6 +2,8 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: monokube
+  labels:
+    org: home
 spec:
   secretName: monokube-https-tls
   dnsNames:
@@ -18,6 +20,8 @@ metadata:
   annotations:
     external-dns.kubernetes.io/private: 'true'
     #external-dns.kubernetes.io/public: 'true'
+  labels:
+    org: home
 spec:
   selector:
     istio: ingressgateway

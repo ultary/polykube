@@ -38,9 +38,7 @@ otel_agent:
 
   mode: daemonset
 
-  image:
-    repository: otel/opentelemetry-collector-k8s
-    tag: 0.101.0
+  namespaceOverride: kube-system
 
   presets:
     logsCollection:
@@ -70,11 +68,11 @@ otel_agent:
           - action: insert
             key: opentelemetry
             value: daemonset
-    # does not work on dependencies with null to unset default value
-    # receivers:
-    #   jaeger: null
-    #   prometheus: null
-    #   zipkin: null
+    receivers:
+      jaeger: null
+      otlp: null
+      prometheus: null
+      zipkin: null
     service:
       pipelines:
         logs:
@@ -85,6 +83,7 @@ otel_agent:
             - attributes
             - memory_limiter
             - batch
+          receivers: []
         metrics:
           exporters:
             - otlp
@@ -93,19 +92,46 @@ otel_agent:
             - attributes
             - memory_limiter
             - batch
-        traces:
-          exporters:
-            - otlp
-          processors:
-            - k8sattributes
-            - attributes
-            - memory_limiter
-            - batch
+          receivers: []
+          #   - otlp
+        traces: null
+          # exporters:
+          #   - otlp
+          # processors:
+          #   - k8sattributes
+          #   - attributes
+          #   - memory_limiter
+          #   - batch
+          # receivers: []
+          # #   - otlp
       telemetry:
         logs:
           level: warn
 
+  image:
+    repository: otel/opentelemetry-collector-k8s
+    tag: 0.104.0
 
+  serviceAccount:
+    create: false
+    name: otel-collector
+
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+
+  service:
+    enabled: false
 
 ##  ==== Collector ====
 
@@ -115,9 +141,7 @@ otel_collector:
 
   mode: deployment
 
-  image:
-    repository: otel/opentelemetry-collector-k8s
-    tag: 0.102.1
+  namespaceOverride: kube-system
 
   replicaCount: 1
 
@@ -140,10 +164,10 @@ otel_collector:
             key: opentelemetry
             value: deployment
     receivers:
-      jaeger:
-      otlp:
-      prometheus:
-      zipkin:
+      jaeger: null
+      otlp: null
+      prometheus: null
+      zipkin: null
     service:
       pipelines:
         logs:
@@ -156,6 +180,31 @@ otel_collector:
         logs:
           level: warn
 
+  image:
+    repository: otel/opentelemetry-collector-k8s
+    tag: 0.104.0
+
+  serviceAccount:
+    create: false
+    name: otel-collector
+
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+
+  service:
+    enabled: false
+
 ##  ==== Kafka Consumer ====
 
 otel_consumer:
@@ -164,9 +213,11 @@ otel_consumer:
 
   mode: deployment
 
+  namespaceOverride: kube-system
+
   image:
     repository: otel/opentelemetry-collector-contrib
-    tag: 0.102.1
+    tag: 0.104.0
 
   replicaCount: 1
 

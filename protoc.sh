@@ -20,4 +20,5 @@ protoc \
   --python_out ./core \
   --pyi_out ./core \
   --grpc_python_out ./core \
+  api/grpc/v1/kluster.proto \
   api/grpc/v1/system.proto

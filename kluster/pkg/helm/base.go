@@ -14,9 +14,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/yaml"
 
-	"ultary.co/kluster/pkg/apps"
-	"ultary.co/kluster/pkg/apps/net"
-	"ultary.co/kluster/pkg/utils"
+	"github.com/ultary/monokube/kluster/pkg/apps"
+	"github.com/ultary/monokube/kluster/pkg/apps/net"
+	"github.com/ultary/monokube/kluster/pkg/utils"
 )
 
 func Parse(chartPath string, namespace string) map[string]apps.Resource {

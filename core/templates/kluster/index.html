@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% load static %}
+
+{% block content %}
+    
+    <h1>Kluster Index</h1>
+
+    <div class="btn-group-vertical gap-1">
+        <button type="button" class="btn btn-outline-primary" disabled>Cilium</button>
+        <button type="button" class="btn btn-outline-primary" disabled>Istio</button>
+        <button type="button" class="btn btn-outline-primary" disabled>Cert Manager</button>
+        
+        <button type="button" class="btn btn-outline-primary">Kafka</button>
+        <button type="button" class="btn btn-outline-primary">OpenTelemetry Agent</button>
+        <button type="button" class="btn btn-outline-primary">OpenTelemetry Collector</button>
+        
+        <button type="button" class="btn btn-outline-primary">MinIO</button>
+        <button type="button" class="btn btn-outline-primary">Grafana Mimir</button>
+        <button type="button" class="btn btn-outline-primary">Grafana Loki</button>
+        <button type="button" class="btn btn-outline-primary">Grafana Tempo</button>
+        <button type="button" class="btn btn-outline-primary">OpenTelemetry Consumer</button>
+
+        <button type="button" class="btn btn-outline-primary">PostgreSQL</button>
+        <button type="button" class="btn btn-outline-primary">Monokube</button>
+        <button type="button" class="btn btn-outline-primary">Dex</button>
+        <button type="button" class="btn btn-outline-primary">Grafana</button>
+    </div>
+   
+{% endblock %}

@@ -2,6 +2,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: postgres
+  labels:
+    app: postgres
+    org: home
 immutable: true
 data:
   POSTGRES_PASSWORD: {{ .Values.postgres.password }}
@@ -13,16 +16,19 @@ metadata:
   name: postgres
   labels:
     app: postgres
+    org: home
 spec:
   minReadySeconds: 10
   selector:
     matchLabels:
       app: postgres
+      org: home
   serviceName: postgres
   template:
     metadata:
       labels:
         app: postgres
+        org: home
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 10
@@ -71,6 +77,7 @@ metadata:
   name: postgres
   labels:
     app: postgres
+    org: home
 spec:
   clusterIP: None
   ports:
@@ -78,4 +85,5 @@ spec:
       name: tcp
   selector:
     app: postgres
+    org: home
 ---
