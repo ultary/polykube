@@ -3,12 +3,35 @@ networks:
     name: monokube
     driver: bridge
 services:
-  core:
+  kluster:
     build:
-      context: ./core
+      context: ./kluster
       dockerfile: Dockerfile
       target: release
-    container_name: monokube-core
+    container_name: monokube-server
+    command:
+      - monokube
+      - serve
+    expose:
+      - 9090
+      - 50051
+    ports:
+      - "0.0.0.0:9090:9090"
+      - "0.0.0.0:50051:50051"
+    read_only: true
+    restart: always
+    volumes:
+      - $HOME/.kube:/root/.kube:ro
+  console:
+    build:
+      context: ./console
+      dockerfile: Dockerfile
+      target: release
+    container_name: monokube-console
+    environment:
+      MONOKUBE_GRPC_HOST: kluster
+      MONOKUBE_GRPC_PORT: 50051
+      PG_HOST: host.docker.internal
     expose:
       - 8000
     read_only: true
@@ -18,7 +41,7 @@ services:
   nginx:
     container_name: monokube-nginx
     depends_on:
-      - core
+      - console
     image: nginx:1.27.0-alpine
     ports:
       - "0.0.0.0:8000:80"

@@ -118,7 +118,7 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	go func() {
 		defer wg.Done()
 
-		address := "127.0.0.1:9090"
+		address := "0.0.0.0:9090"
 		if err := httpServer.Listen(address); err != nil {
 			log.Fatalf("Failed to listen http server: %v", err)
 		}
@@ -129,7 +129,7 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	go func() {
 		defer wg.Done()
 
-		network, address := "tcp4", "127.0.0.1:50051"
+		network, address := "tcp4", "0.0.0.0:50051"
 		//network, address := "unix", "/tmp/kluster.sock"
 		if err := grpcServer.Serve(network, address); err != nil {
 			log.Fatalf("Failed to serve grpc server: %v", err)

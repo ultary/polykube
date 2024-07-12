@@ -143,6 +143,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ################################################################
 #  MonoKube
 
+MK_GRPC_HOST = environ.get('MONOKUBE_GRPC_HOST', 'localhost')
+MK_GRPC_PORT = environ.get('MONOKUBE_GRPC_PORT', '50051')
+
 MK_IN_CLUSTER = False
 MK_KUBECONFIG_FILE = '~/.kube/config'
 MK_KUBECONFIG_CONTEXT = 'docker-desktop'

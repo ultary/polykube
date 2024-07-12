@@ -44,6 +44,8 @@ VOLUME /app/static
 
 COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=deps /usr/local/bin/hypercorn /usr/local/bin/hypercorn
-COPY --from=builder /tmp/static    /app/static
-COPY --from=builder /app/templates /app/templates
+COPY --from=builder /app/api       /app/api
+COPY --from=builder /app/apps      /app/apps
 COPY --from=builder /app/monokube  /app/monokube
+COPY --from=builder /app/templates /app/templates
+COPY --from=builder /tmp/static    /app/static
