@@ -10,7 +10,7 @@ package dokevy.v1;
 
 import "google/protobuf/empty.proto";
 
-service SystemService {
+service System {
   rpc Ping(google.protobuf.Empty) returns (Pong) {
   }
 }

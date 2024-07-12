@@ -6,7 +6,7 @@ from api.grpc.v1 import system_pb2 as api_dot_grpc_dot_v1_dot_system__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-class SystemServiceStub(object):
+class SystemStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -16,13 +16,13 @@ class SystemServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Ping = channel.unary_unary(
-                '/dokevy.v1.SystemService/Ping',
+                '/dokevy.v1.System/Ping',
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.Pong.FromString,
                 _registered_method=True)
 
 
-class SystemServiceServicer(object):
+class SystemServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Ping(self, request, context):
@@ -32,7 +32,7 @@ class SystemServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_SystemServiceServicer_to_server(servicer, server):
+def add_SystemServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Ping': grpc.unary_unary_rpc_method_handler(
                     servicer.Ping,
@@ -41,13 +41,13 @@ def add_SystemServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'dokevy.v1.SystemService', rpc_method_handlers)
+            'dokevy.v1.System', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('dokevy.v1.SystemService', rpc_method_handlers)
+    server.add_registered_method_handlers('dokevy.v1.System', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class SystemService(object):
+class System(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -64,7 +64,7 @@ class SystemService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/dokevy.v1.SystemService/Ping',
+            '/dokevy.v1.System/Ping',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             api_dot_grpc_dot_v1_dot_system__pb2.Pong.FromString,
             options,

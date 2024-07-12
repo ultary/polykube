@@ -2,17 +2,17 @@ package main
 
 import (
 	"context"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/k8s/keeper"
-	"log"
-	"net"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
+	log "github.com/sirupsen/logrus"
 
-	"github.com/ultary/monokube/kluster/api/grpc/v1"
+	"github.com/ultary/monokube/kluster/pkg/api/grpc"
+	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/kube/watch"
 )
 
 func main() {
@@ -39,43 +39,40 @@ func main() {
 	//  Server Instances
 	//
 
+	client := k8s.NewClient()
+	tower := watch.NewTower(client)
+
 	var wg sync.WaitGroup
 
-	ctx := k8s.NewContext(context.Background())
-	k := keeper.Init(ctx)
-
-	wg.Add(1)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		defer wg.Done()
-		k.Listen()
+		_ = <-sigs
+
+		log.Info("Gracefully shutting down ...")
+		tower.Shutdown()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
-		server := grpc.NewServer()
-		v1.RegisterSystemServiceServer(server, &System{})
+		tower.Watch()
+	}()
 
-		lis, err := net.Listen("tcp4", "127.0.0.1:50051")
-		//lis, err := net.Listen("unix", "/tmp/kluster.sock")
-		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
-		}
-		if err = server.Serve(lis); err != nil {
-			log.Fatalf("failed to serve: %v", err)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		network, address := "tcp4", "127.0.0.1:50051"
+		//network, address := "unix", "/tmp/kluster.sock"
+
+		server := grpc.NewServer()
+		if err := server.Serve(network, address); err != nil {
+			log.Fatalf("Failed to serve grpc server: %v", err)
 		}
 	}()
 
 	wg.Wait()
-}
-
-type System struct {
-	v1.SystemServiceServer
-}
-
-func (s *System) Ping(ctx context.Context, empty *emptypb.Empty) (*v1.Pong, error) {
-	return &v1.Pong{
-		Pong: "pong",
-	}, nil
 }

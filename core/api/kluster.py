@@ -11,8 +11,8 @@ class Client(object):
     def __init__(self):
         host = '127.0.0.1'
         port = 50051
-        #channel = grpc.insecure_channel(f'{host}: {port}')
-        channel = grpc.insecure_channel('unix:///tmp/kluster.sock')
+        channel = grpc.insecure_channel(f'{host}: {port}')
+        #channel = grpc.insecure_channel('unix:///tmp/kluster.sock')
         self.stub = system_pb2_grpc.SystemServiceStub(channel)
 
     def ping(self):

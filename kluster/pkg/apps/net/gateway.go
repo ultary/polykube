@@ -3,7 +3,7 @@ package net
 import (
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	log "github.com/sirupsen/logrus"
-	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
+	istio "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/yaml"
 
 	"github.com/ultary/monokube/kluster/pkg/apps"

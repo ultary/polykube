@@ -20,90 +20,90 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	SystemService_Ping_FullMethodName = "/dokevy.v1.SystemService/Ping"
+	System_Ping_FullMethodName = "/dokevy.v1.System/Ping"
 )
 
-// SystemServiceClient is the client API for SystemService service.
+// SystemClient is the client API for System service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type SystemServiceClient interface {
+type SystemClient interface {
 	Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Pong, error)
 }
 
-type systemServiceClient struct {
+type systemClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewSystemServiceClient(cc grpc.ClientConnInterface) SystemServiceClient {
-	return &systemServiceClient{cc}
+func NewSystemClient(cc grpc.ClientConnInterface) SystemClient {
+	return &systemClient{cc}
 }
 
-func (c *systemServiceClient) Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Pong, error) {
+func (c *systemClient) Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Pong, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Pong)
-	err := c.cc.Invoke(ctx, SystemService_Ping_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, System_Ping_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// SystemServiceServer is the server API for SystemService service.
-// All implementations must embed UnimplementedSystemServiceServer
+// SystemServer is the server API for System service.
+// All implementations must embed UnimplementedSystemServer
 // for forward compatibility
-type SystemServiceServer interface {
+type SystemServer interface {
 	Ping(context.Context, *emptypb.Empty) (*Pong, error)
-	mustEmbedUnimplementedSystemServiceServer()
+	mustEmbedUnimplementedSystemServer()
 }
 
-// UnimplementedSystemServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedSystemServiceServer struct {
+// UnimplementedSystemServer must be embedded to have forward compatible implementations.
+type UnimplementedSystemServer struct {
 }
 
-func (UnimplementedSystemServiceServer) Ping(context.Context, *emptypb.Empty) (*Pong, error) {
+func (UnimplementedSystemServer) Ping(context.Context, *emptypb.Empty) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
-func (UnimplementedSystemServiceServer) mustEmbedUnimplementedSystemServiceServer() {}
+func (UnimplementedSystemServer) mustEmbedUnimplementedSystemServer() {}
 
-// UnsafeSystemServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to SystemServiceServer will
+// UnsafeSystemServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SystemServer will
 // result in compilation errors.
-type UnsafeSystemServiceServer interface {
-	mustEmbedUnimplementedSystemServiceServer()
+type UnsafeSystemServer interface {
+	mustEmbedUnimplementedSystemServer()
 }
 
-func RegisterSystemServiceServer(s grpc.ServiceRegistrar, srv SystemServiceServer) {
-	s.RegisterService(&SystemService_ServiceDesc, srv)
+func RegisterSystemServer(s grpc.ServiceRegistrar, srv SystemServer) {
+	s.RegisterService(&System_ServiceDesc, srv)
 }
 
-func _SystemService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _System_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SystemServiceServer).Ping(ctx, in)
+		return srv.(SystemServer).Ping(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SystemService_Ping_FullMethodName,
+		FullMethod: System_Ping_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemServiceServer).Ping(ctx, req.(*emptypb.Empty))
+		return srv.(SystemServer).Ping(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// SystemService_ServiceDesc is the grpc.ServiceDesc for SystemService service.
+// System_ServiceDesc is the grpc.ServiceDesc for System service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var SystemService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dokevy.v1.SystemService",
-	HandlerType: (*SystemServiceServer)(nil),
+var System_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dokevy.v1.System",
+	HandlerType: (*SystemServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Ping",
-			Handler:    _SystemService_Ping_Handler,
+			Handler:    _System_Ping_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
