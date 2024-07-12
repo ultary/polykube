@@ -2,10 +2,8 @@ package k8s
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	certmanagerversioned "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
@@ -25,7 +23,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/client-go/util/homedir"
 )
 
 type Client struct {
@@ -37,21 +34,11 @@ type Client struct {
 	istioClientset       *istioversioned.Clientset
 }
 
-func NewClient() *Client {
+func NewClient(kubeconfig, kubecontext string) *Client {
 
 	var err error
 
 	retval := &Client{}
-
-	// --------
-
-	kubeconfig, kubecontext := "", "k3s"
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = filepath.Join(home, ".kube", "config")
-	}
-	kubeconfig = *flag.String("kubeconfig", kubeconfig, "(optional) absolute path to the kubeconfig file")
-	kubecontext = *flag.String("context", kubecontext, "The name of the kubeconfig context to use")
-	flag.Parse()
 
 	// kubeconfig 파일 로드
 	rules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
