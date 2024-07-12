@@ -17,8 +17,8 @@ protoc \
   --go_out ./kluster \
   --go-grpc_opt paths=source_relative \
   --go-grpc_out ./kluster \
-  --python_out ./core \
-  --pyi_out ./core \
-  --grpc_python_out ./core \
+  --python_out ./console \
+  --pyi_out ./console \
+  --grpc_python_out ./console \
   api/grpc/v1/kluster.proto \
   api/grpc/v1/system.proto
