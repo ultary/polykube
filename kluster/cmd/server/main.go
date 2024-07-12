@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/ultary/monokube/kluster/pkg/api/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -41,6 +42,7 @@ func main() {
 
 	client := k8s.NewClient()
 	grpcServer := grpc.NewServer()
+	httpServer := http.NewServer()
 	watchTower := watch.NewTower(client)
 
 	var wg sync.WaitGroup
@@ -53,9 +55,11 @@ func main() {
 
 		log.Info("Gracefully shutting down ...")
 		grpcServer.Stop()
+		httpServer.Shutdown()
 		watchTower.Shutdown()
 	}()
 
+	// WatchTower
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -63,6 +67,18 @@ func main() {
 		watchTower.Watch()
 	}()
 
+	// HTTP server
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		address := "127.0.0.1:9090"
+		if err := httpServer.Listen(address); err != nil {
+			log.Fatalf("Failed to listen http server: %v", err)
+		}
+	}()
+
+	// gRPC server
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

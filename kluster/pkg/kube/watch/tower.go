@@ -125,17 +125,14 @@ func (t *Tower) Watch() {
 }
 
 func (t *Tower) Shutdown() {
-	log.Info("[Tower] Start shutdown")
+	log.Info("[Tower] Stopping process")
 
-	log.Info("[Tower] Close stop channel")
 	close(t.stop)
-
-	log.Info("[Tower] Shutting down informers' factory")
 	for _, shutdown := range t.shutdownFuncs {
 		shutdown()
 	}
 
-	log.Info("[Tower] Completed shutdown")
+	log.Info("[Tower] Stopped process")
 }
 
 func (t *Tower) onAdd(obj interface{}) {
