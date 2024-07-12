@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/ultary/monokube/core/api/grpc/v1";
+option java_multiple_files = true;
+option java_outer_classname = "KlusterProto";
+option java_package = "co.ultary.api.grpc.v1";
+option objc_class_prefix = "KlusterV1";
+
+package ultary.kluster.v1;
+
+service Kluster {
+  rpc SyncOpenTelemetry(SyncOpenTelemetryRequest) returns (SyncOpenTelemetryResponse) {}
+}
+
+message SyncOpenTelemetryRequest {
+  string cluster_name = 1;
+}
+
+message SyncOpenTelemetryResponse {
+  string pong = 1;
+}
