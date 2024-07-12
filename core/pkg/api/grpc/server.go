@@ -27,12 +27,18 @@ func NewServer() *Server {
 func (s *Server) Serve(network, address string) error {
 	lis, err := net.Listen(network, address)
 	if err != nil {
-		log.Errorf("Failed to listen grpc: %v", err)
+		log.Errorf("[gRPC] Failed to listen grpc: %v", err)
 		return err
 	}
 	if err = s.server.Serve(lis); err != nil {
-		log.Errorf("Failed to serve grpc: %v", err)
+		log.Errorf("[gRPC] Failed to serve grpc: %v", err)
 		return err
 	}
 	return nil
+}
+
+func (s *Server) Stop() {
+	log.Info("[gRPC] Stopping grpc server")
+	s.server.Stop()
+	log.Info("[gRPC] Stopped grpc server")
 }

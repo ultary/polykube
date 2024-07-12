@@ -40,7 +40,8 @@ func main() {
 	//
 
 	client := k8s.NewClient()
-	tower := watch.NewTower(client)
+	grpcServer := grpc.NewServer()
+	watchTower := watch.NewTower(client)
 
 	var wg sync.WaitGroup
 
@@ -51,14 +52,15 @@ func main() {
 		_ = <-sigs
 
 		log.Info("Gracefully shutting down ...")
-		tower.Shutdown()
+		grpcServer.Stop()
+		watchTower.Shutdown()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
-		tower.Watch()
+		watchTower.Watch()
 	}()
 
 	wg.Add(1)
@@ -67,9 +69,7 @@ func main() {
 
 		network, address := "tcp4", "127.0.0.1:50051"
 		//network, address := "unix", "/tmp/kluster.sock"
-
-		server := grpc.NewServer()
-		if err := server.Serve(network, address); err != nil {
+		if err := grpcServer.Serve(network, address); err != nil {
 			log.Fatalf("Failed to serve grpc server: %v", err)
 		}
 	}()

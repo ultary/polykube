@@ -11,7 +11,6 @@ import (
 	istioinformers "istio.io/client-go/pkg/informers/externalversions"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -24,6 +23,7 @@ type shutdownFuc func()
 
 type Tower struct {
 	queue         workqueue.RateLimitingInterface
+	stop          chan struct{}
 	startFuncs    []startFunc
 	shutdownFuncs []shutdownFuc
 }
@@ -80,9 +80,9 @@ func NewTower(client *k8s.Client) *Tower {
 
 func (t *Tower) Watch() {
 
-	never := wait.NeverStop
+	t.stop = make(chan struct{})
 	for _, start := range t.startFuncs {
-		start(never)
+		start(t.stop)
 	}
 
 	for {
@@ -125,9 +125,17 @@ func (t *Tower) Watch() {
 }
 
 func (t *Tower) Shutdown() {
+	log.Info("[Tower] Start shutdown")
+
+	log.Info("[Tower] Close stop channel")
+	close(t.stop)
+
+	log.Info("[Tower] Shutting down informers' factory")
 	for _, shutdown := range t.shutdownFuncs {
 		shutdown()
 	}
+
+	log.Info("[Tower] Completed shutdown")
 }
 
 func (t *Tower) onAdd(obj interface{}) {
