@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "github.com/ultary/monokube/kluster/api/grpc/v1";
+option java_multiple_files = true;
+option java_outer_classname = "SystemProto";
+option java_package = "co.ultary.kluster.grpc.v1";
+option objc_class_prefix = "KlusterV1";
+
+package dokevy.v1;
+
+import "google/protobuf/empty.proto";
+
+service System {
+  rpc Ping(google.protobuf.Empty) returns (Pong) {
+  }
+}
+
+message Pong {
+  string pong = 1;
+}
