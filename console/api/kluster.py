@@ -13,7 +13,7 @@ class Client(object):
         port = 50051
         channel = grpc.insecure_channel(f'{host}: {port}')
         #channel = grpc.insecure_channel('unix:///tmp/kluster.sock')
-        self.stub = system_pb2_grpc.SystemServiceStub(channel)
+        self.stub = system_pb2_grpc.SystemStub(channel)
 
     def ping(self):
         empty = google_dot_protobuf_dot_empty__pb2.Empty()
