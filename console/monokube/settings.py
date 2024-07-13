@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_htmx',
     # MonoKube
     'apps.kluster',
+    'apps.system',
 ]
 
 MIDDLEWARE = [

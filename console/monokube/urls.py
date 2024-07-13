@@ -28,4 +28,5 @@ urlpatterns = [
     path('ready', ready),
     path('', index, name="home"),
     path('kluster/', include('apps.kluster.urls', namespace='kluster')),
+    path('platform/', include('apps.system.urls', namespace='system')),
 ]

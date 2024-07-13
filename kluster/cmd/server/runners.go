@@ -87,7 +87,7 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	//
 
 	client := k8s.NewClient(s.kubeconfig, s.kubecontext)
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(client)
 	httpServer := http.NewServer()
 	watchTower := watch.NewTower(client)
 

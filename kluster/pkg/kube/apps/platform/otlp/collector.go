@@ -1,5 +1,0 @@
-package otlp
-
-func ApplyCollector() {
-
-}

@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
+	Kluster_CreateNamespace_FullMethodName   = "/ultary.kluster.v1.Kluster/CreateNamespace"
 	Kluster_SyncOpenTelemetry_FullMethodName = "/ultary.kluster.v1.Kluster/SyncOpenTelemetry"
 )
 
@@ -26,6 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type KlusterClient interface {
+	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error)
 	SyncOpenTelemetry(ctx context.Context, in *SyncOpenTelemetryRequest, opts ...grpc.CallOption) (*SyncOpenTelemetryResponse, error)
 }
 
@@ -35,6 +37,16 @@ type klusterClient struct {
 
 func NewKlusterClient(cc grpc.ClientConnInterface) KlusterClient {
 	return &klusterClient{cc}
+}
+
+func (c *klusterClient) CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*CreateNamespaceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateNamespaceResponse)
+	err := c.cc.Invoke(ctx, Kluster_CreateNamespace_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *klusterClient) SyncOpenTelemetry(ctx context.Context, in *SyncOpenTelemetryRequest, opts ...grpc.CallOption) (*SyncOpenTelemetryResponse, error) {
@@ -51,6 +63,7 @@ func (c *klusterClient) SyncOpenTelemetry(ctx context.Context, in *SyncOpenTelem
 // All implementations must embed UnimplementedKlusterServer
 // for forward compatibility
 type KlusterServer interface {
+	CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error)
 	SyncOpenTelemetry(context.Context, *SyncOpenTelemetryRequest) (*SyncOpenTelemetryResponse, error)
 	mustEmbedUnimplementedKlusterServer()
 }
@@ -59,6 +72,9 @@ type KlusterServer interface {
 type UnimplementedKlusterServer struct {
 }
 
+func (UnimplementedKlusterServer) CreateNamespace(context.Context, *CreateNamespaceRequest) (*CreateNamespaceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespace not implemented")
+}
 func (UnimplementedKlusterServer) SyncOpenTelemetry(context.Context, *SyncOpenTelemetryRequest) (*SyncOpenTelemetryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncOpenTelemetry not implemented")
 }
@@ -73,6 +89,24 @@ type UnsafeKlusterServer interface {
 
 func RegisterKlusterServer(s grpc.ServiceRegistrar, srv KlusterServer) {
 	s.RegisterService(&Kluster_ServiceDesc, srv)
+}
+
+func _Kluster_CreateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNamespaceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KlusterServer).CreateNamespace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Kluster_CreateNamespace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KlusterServer).CreateNamespace(ctx, req.(*CreateNamespaceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Kluster_SyncOpenTelemetry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -100,6 +134,10 @@ var Kluster_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ultary.kluster.v1.Kluster",
 	HandlerType: (*KlusterServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateNamespace",
+			Handler:    _Kluster_CreateNamespace_Handler,
+		},
 		{
 			MethodName: "SyncOpenTelemetry",
 			Handler:    _Kluster_SyncOpenTelemetry_Handler,

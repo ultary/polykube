@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19\x61pi/grpc/v1/kluster.proto\x12\x11ultary.kluster.v1\"0\n\x18SyncOpenTelemetryRequest\x12\x14\n\x0c\x63luster_name\x18\x01 \x01(\t\")\n\x19SyncOpenTelemetryResponse\x12\x0c\n\x04pong\x18\x01 \x01(\t2{\n\x07Kluster\x12p\n\x11SyncOpenTelemetry\x12+.ultary.kluster.v1.SyncOpenTelemetryRequest\x1a,.ultary.kluster.v1.SyncOpenTelemetryResponse\"\x00\x42\x63\n\x15\x63o.ultary.api.grpc.v1B\x0cKlusterProtoP\x01Z.github.com/ultary/monokube/kluster/api/grpc/v1\xa2\x02\tKlusterV1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19\x61pi/grpc/v1/kluster.proto\x12\x11ultary.kluster.v1\"\xa1\x02\n\x16\x43reateNamespaceRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x45\n\x06labels\x18\x02 \x03(\x0b\x32\x35.ultary.kluster.v1.CreateNamespaceRequest.LabelsEntry\x12O\n\x0b\x61nnotations\x18\x03 \x03(\x0b\x32:.ultary.kluster.v1.CreateNamespaceRequest.AnnotationsEntry\x1a-\n\x0bLabelsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x32\n\x10\x41nnotationsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\'\n\x17\x43reateNamespaceResponse\x12\x0c\n\x04pong\x18\x01 \x01(\t\"0\n\x18SyncOpenTelemetryRequest\x12\x14\n\x0c\x63luster_name\x18\x01 \x01(\t\")\n\x19SyncOpenTelemetryResponse\x12\x0c\n\x04pong\x18\x01 \x01(\t2\xe7\x01\n\x07Kluster\x12j\n\x0f\x43reateNamespace\x12).ultary.kluster.v1.CreateNamespaceRequest\x1a*.ultary.kluster.v1.CreateNamespaceResponse\"\x00\x12p\n\x11SyncOpenTelemetry\x12+.ultary.kluster.v1.SyncOpenTelemetryRequest\x1a,.ultary.kluster.v1.SyncOpenTelemetryResponse\"\x00\x42\x63\n\x15\x63o.ultary.api.grpc.v1B\x0cKlusterProtoP\x01Z.github.com/ultary/monokube/kluster/api/grpc/v1\xa2\x02\tKlusterV1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,10 +32,22 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'api.grpc.v1.kluster_pb2', _
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\025co.ultary.api.grpc.v1B\014KlusterProtoP\001Z.github.com/ultary/monokube/kluster/api/grpc/v1\242\002\tKlusterV1'
-  _globals['_SYNCOPENTELEMETRYREQUEST']._serialized_start=48
-  _globals['_SYNCOPENTELEMETRYREQUEST']._serialized_end=96
-  _globals['_SYNCOPENTELEMETRYRESPONSE']._serialized_start=98
-  _globals['_SYNCOPENTELEMETRYRESPONSE']._serialized_end=139
-  _globals['_KLUSTER']._serialized_start=141
-  _globals['_KLUSTER']._serialized_end=264
+  _globals['_CREATENAMESPACEREQUEST_LABELSENTRY']._loaded_options = None
+  _globals['_CREATENAMESPACEREQUEST_LABELSENTRY']._serialized_options = b'8\001'
+  _globals['_CREATENAMESPACEREQUEST_ANNOTATIONSENTRY']._loaded_options = None
+  _globals['_CREATENAMESPACEREQUEST_ANNOTATIONSENTRY']._serialized_options = b'8\001'
+  _globals['_CREATENAMESPACEREQUEST']._serialized_start=49
+  _globals['_CREATENAMESPACEREQUEST']._serialized_end=338
+  _globals['_CREATENAMESPACEREQUEST_LABELSENTRY']._serialized_start=241
+  _globals['_CREATENAMESPACEREQUEST_LABELSENTRY']._serialized_end=286
+  _globals['_CREATENAMESPACEREQUEST_ANNOTATIONSENTRY']._serialized_start=288
+  _globals['_CREATENAMESPACEREQUEST_ANNOTATIONSENTRY']._serialized_end=338
+  _globals['_CREATENAMESPACERESPONSE']._serialized_start=340
+  _globals['_CREATENAMESPACERESPONSE']._serialized_end=379
+  _globals['_SYNCOPENTELEMETRYREQUEST']._serialized_start=381
+  _globals['_SYNCOPENTELEMETRYREQUEST']._serialized_end=429
+  _globals['_SYNCOPENTELEMETRYRESPONSE']._serialized_start=431
+  _globals['_SYNCOPENTELEMETRYRESPONSE']._serialized_end=472
+  _globals['_KLUSTER']._serialized_start=475
+  _globals['_KLUSTER']._serialized_end=706
 # @@protoc_insertion_point(module_scope)

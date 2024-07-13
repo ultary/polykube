@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from api.kluster import client
+from api.grpc.client import client
 
 
 def index(request):

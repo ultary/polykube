@@ -1,27 +1,35 @@
 package grpc
 
 import (
+	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/kube"
 	"net"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
-	"github.com/ultary/monokube/kluster/pkg/api/grpc/v1"
+	"github.com/ultary/monokube/kluster/api/grpc/v1"
 )
 
 type Server struct {
-	server *grpc.Server
+	v1.KlusterServer
+	v1.SystemServer
+
+	cluster *kube.Cluster
+	server  *grpc.Server
 }
 
-func NewServer() *Server {
+func NewServer(client *k8s.Client) *Server {
 
 	server := grpc.NewServer()
-	v1.RegisterKlusterServer(server)
-	v1.RegisterSystemServer(server)
-
-	return &Server{
-		server: server,
+	retval := &Server{
+		cluster: kube.NewCluster(client),
+		server:  server,
 	}
+
+	v1.RegisterKlusterServer(server, retval)
+	v1.RegisterSystemServer(server, retval)
+	return retval
 }
 
 func (s *Server) Serve(network, address string) error {

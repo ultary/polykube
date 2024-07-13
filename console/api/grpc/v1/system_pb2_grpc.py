@@ -20,12 +20,45 @@ class SystemStub(object):
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.Pong.FromString,
                 _registered_method=True)
+        self.EnableOpenTelemetryCollector = channel.unary_unary(
+                '/dokevy.v1.System/EnableOpenTelemetryCollector',
+                request_serializer=api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorRequest.SerializeToString,
+                response_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorResponse.FromString,
+                _registered_method=True)
+        self.DisableOpenTelemetryCollector = channel.unary_unary(
+                '/dokevy.v1.System/DisableOpenTelemetryCollector',
+                request_serializer=api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorRequest.SerializeToString,
+                response_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorResponse.FromString,
+                _registered_method=True)
+        self.UpdateOpenTelemetryCollector = channel.unary_unary(
+                '/dokevy.v1.System/UpdateOpenTelemetryCollector',
+                request_serializer=api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorRequest.SerializeToString,
+                response_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorResponse.FromString,
+                _registered_method=True)
 
 
 class SystemServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Ping(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def EnableOpenTelemetryCollector(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DisableOpenTelemetryCollector(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateOpenTelemetryCollector(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -38,6 +71,21 @@ def add_SystemServicer_to_server(servicer, server):
                     servicer.Ping,
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=api_dot_grpc_dot_v1_dot_system__pb2.Pong.SerializeToString,
+            ),
+            'EnableOpenTelemetryCollector': grpc.unary_unary_rpc_method_handler(
+                    servicer.EnableOpenTelemetryCollector,
+                    request_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorRequest.FromString,
+                    response_serializer=api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorResponse.SerializeToString,
+            ),
+            'DisableOpenTelemetryCollector': grpc.unary_unary_rpc_method_handler(
+                    servicer.DisableOpenTelemetryCollector,
+                    request_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorRequest.FromString,
+                    response_serializer=api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorResponse.SerializeToString,
+            ),
+            'UpdateOpenTelemetryCollector': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateOpenTelemetryCollector,
+                    request_deserializer=api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorRequest.FromString,
+                    response_serializer=api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -67,6 +115,87 @@ class System(object):
             '/dokevy.v1.System/Ping',
             google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             api_dot_grpc_dot_v1_dot_system__pb2.Pong.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def EnableOpenTelemetryCollector(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dokevy.v1.System/EnableOpenTelemetryCollector',
+            api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorRequest.SerializeToString,
+            api_dot_grpc_dot_v1_dot_system__pb2.EnableOpenTelemetryCollectorResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DisableOpenTelemetryCollector(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dokevy.v1.System/DisableOpenTelemetryCollector',
+            api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorRequest.SerializeToString,
+            api_dot_grpc_dot_v1_dot_system__pb2.DisableOpenTelemetryCollectorResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateOpenTelemetryCollector(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/dokevy.v1.System/UpdateOpenTelemetryCollector',
+            api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorRequest.SerializeToString,
+            api_dot_grpc_dot_v1_dot_system__pb2.UpdateOpenTelemetryCollectorResponse.FromString,
             options,
             channel_credentials,
             insecure,

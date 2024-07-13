@@ -4,4 +4,17 @@
 
 {% block content %}
 <h1>INDEX</h1>
+
+    <ul>
+       <li>
+           OpenTelemetry Collector
+           <ul>
+               <li><button hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-post="{% url 'system:otlp' %}" hx-trigger="click">Enable</button></li>
+               <li><button hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-delete="{% url 'system:otlp' %}" hx-trigger="click">Disable</button></li>
+               <li><button hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-put="{% url 'system:otlp' %}" hx-trigger="click">Update</button></li>
+           </ul>
+       </li>
+    
+    </ul>
+    
 {% endblock %}

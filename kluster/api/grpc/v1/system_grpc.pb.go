@@ -20,7 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	System_Ping_FullMethodName = "/dokevy.v1.System/Ping"
+	System_Ping_FullMethodName                          = "/dokevy.v1.System/Ping"
+	System_EnableOpenTelemetryCollector_FullMethodName  = "/dokevy.v1.System/EnableOpenTelemetryCollector"
+	System_DisableOpenTelemetryCollector_FullMethodName = "/dokevy.v1.System/DisableOpenTelemetryCollector"
+	System_UpdateOpenTelemetryCollector_FullMethodName  = "/dokevy.v1.System/UpdateOpenTelemetryCollector"
 )
 
 // SystemClient is the client API for System service.
@@ -28,6 +31,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemClient interface {
 	Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Pong, error)
+	EnableOpenTelemetryCollector(ctx context.Context, in *EnableOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*EnableOpenTelemetryCollectorResponse, error)
+	DisableOpenTelemetryCollector(ctx context.Context, in *DisableOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*DisableOpenTelemetryCollectorResponse, error)
+	UpdateOpenTelemetryCollector(ctx context.Context, in *UpdateOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*UpdateOpenTelemetryCollectorResponse, error)
 }
 
 type systemClient struct {
@@ -48,11 +54,44 @@ func (c *systemClient) Ping(ctx context.Context, in *emptypb.Empty, opts ...grpc
 	return out, nil
 }
 
+func (c *systemClient) EnableOpenTelemetryCollector(ctx context.Context, in *EnableOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*EnableOpenTelemetryCollectorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EnableOpenTelemetryCollectorResponse)
+	err := c.cc.Invoke(ctx, System_EnableOpenTelemetryCollector_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) DisableOpenTelemetryCollector(ctx context.Context, in *DisableOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*DisableOpenTelemetryCollectorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DisableOpenTelemetryCollectorResponse)
+	err := c.cc.Invoke(ctx, System_DisableOpenTelemetryCollector_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemClient) UpdateOpenTelemetryCollector(ctx context.Context, in *UpdateOpenTelemetryCollectorRequest, opts ...grpc.CallOption) (*UpdateOpenTelemetryCollectorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateOpenTelemetryCollectorResponse)
+	err := c.cc.Invoke(ctx, System_UpdateOpenTelemetryCollector_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SystemServer is the server API for System service.
 // All implementations must embed UnimplementedSystemServer
 // for forward compatibility
 type SystemServer interface {
 	Ping(context.Context, *emptypb.Empty) (*Pong, error)
+	EnableOpenTelemetryCollector(context.Context, *EnableOpenTelemetryCollectorRequest) (*EnableOpenTelemetryCollectorResponse, error)
+	DisableOpenTelemetryCollector(context.Context, *DisableOpenTelemetryCollectorRequest) (*DisableOpenTelemetryCollectorResponse, error)
+	UpdateOpenTelemetryCollector(context.Context, *UpdateOpenTelemetryCollectorRequest) (*UpdateOpenTelemetryCollectorResponse, error)
 	mustEmbedUnimplementedSystemServer()
 }
 
@@ -62,6 +101,15 @@ type UnimplementedSystemServer struct {
 
 func (UnimplementedSystemServer) Ping(context.Context, *emptypb.Empty) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedSystemServer) EnableOpenTelemetryCollector(context.Context, *EnableOpenTelemetryCollectorRequest) (*EnableOpenTelemetryCollectorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableOpenTelemetryCollector not implemented")
+}
+func (UnimplementedSystemServer) DisableOpenTelemetryCollector(context.Context, *DisableOpenTelemetryCollectorRequest) (*DisableOpenTelemetryCollectorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableOpenTelemetryCollector not implemented")
+}
+func (UnimplementedSystemServer) UpdateOpenTelemetryCollector(context.Context, *UpdateOpenTelemetryCollectorRequest) (*UpdateOpenTelemetryCollectorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateOpenTelemetryCollector not implemented")
 }
 func (UnimplementedSystemServer) mustEmbedUnimplementedSystemServer() {}
 
@@ -94,6 +142,60 @@ func _System_Ping_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _System_EnableOpenTelemetryCollector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableOpenTelemetryCollectorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).EnableOpenTelemetryCollector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_EnableOpenTelemetryCollector_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).EnableOpenTelemetryCollector(ctx, req.(*EnableOpenTelemetryCollectorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_DisableOpenTelemetryCollector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DisableOpenTelemetryCollectorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).DisableOpenTelemetryCollector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_DisableOpenTelemetryCollector_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).DisableOpenTelemetryCollector(ctx, req.(*DisableOpenTelemetryCollectorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _System_UpdateOpenTelemetryCollector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateOpenTelemetryCollectorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemServer).UpdateOpenTelemetryCollector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: System_UpdateOpenTelemetryCollector_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemServer).UpdateOpenTelemetryCollector(ctx, req.(*UpdateOpenTelemetryCollectorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // System_ServiceDesc is the grpc.ServiceDesc for System service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +206,18 @@ var System_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _System_Ping_Handler,
+		},
+		{
+			MethodName: "EnableOpenTelemetryCollector",
+			Handler:    _System_EnableOpenTelemetryCollector_Handler,
+		},
+		{
+			MethodName: "DisableOpenTelemetryCollector",
+			Handler:    _System_DisableOpenTelemetryCollector_Handler,
+		},
+		{
+			MethodName: "UpdateOpenTelemetryCollector",
+			Handler:    _System_UpdateOpenTelemetryCollector_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

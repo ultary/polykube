@@ -10,3 +10,27 @@ class Pong(_message.Message):
     PONG_FIELD_NUMBER: _ClassVar[int]
     pong: str
     def __init__(self, pong: _Optional[str] = ...) -> None: ...
+
+class EnableOpenTelemetryCollectorRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class EnableOpenTelemetryCollectorResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DisableOpenTelemetryCollectorRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DisableOpenTelemetryCollectorResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class UpdateOpenTelemetryCollectorRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class UpdateOpenTelemetryCollectorResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...

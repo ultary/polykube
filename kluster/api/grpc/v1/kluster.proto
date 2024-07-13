@@ -9,7 +9,18 @@ option objc_class_prefix = "KlusterV1";
 package ultary.kluster.v1;
 
 service Kluster {
+  rpc CreateNamespace(CreateNamespaceRequest) returns (CreateNamespaceResponse) {}
   rpc SyncOpenTelemetry(SyncOpenTelemetryRequest) returns (SyncOpenTelemetryResponse) {}
+}
+
+message CreateNamespaceRequest {
+  string name = 1;
+  map<string, string> labels = 2;
+  map<string, string> annotations = 3;
+}
+
+message CreateNamespaceResponse {
+  string pong = 1;
 }
 
 message SyncOpenTelemetryRequest {

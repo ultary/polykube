@@ -14,6 +14,11 @@ class KlusterStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.CreateNamespace = channel.unary_unary(
+                '/ultary.kluster.v1.Kluster/CreateNamespace',
+                request_serializer=api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceRequest.SerializeToString,
+                response_deserializer=api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceResponse.FromString,
+                _registered_method=True)
         self.SyncOpenTelemetry = channel.unary_unary(
                 '/ultary.kluster.v1.Kluster/SyncOpenTelemetry',
                 request_serializer=api_dot_grpc_dot_v1_dot_kluster__pb2.SyncOpenTelemetryRequest.SerializeToString,
@@ -24,6 +29,12 @@ class KlusterStub(object):
 class KlusterServicer(object):
     """Missing associated documentation comment in .proto file."""
 
+    def CreateNamespace(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def SyncOpenTelemetry(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -33,6 +44,11 @@ class KlusterServicer(object):
 
 def add_KlusterServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'CreateNamespace': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateNamespace,
+                    request_deserializer=api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceRequest.FromString,
+                    response_serializer=api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceResponse.SerializeToString,
+            ),
             'SyncOpenTelemetry': grpc.unary_unary_rpc_method_handler(
                     servicer.SyncOpenTelemetry,
                     request_deserializer=api_dot_grpc_dot_v1_dot_kluster__pb2.SyncOpenTelemetryRequest.FromString,
@@ -48,6 +64,33 @@ def add_KlusterServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Kluster(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def CreateNamespace(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ultary.kluster.v1.Kluster/CreateNamespace',
+            api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceRequest.SerializeToString,
+            api_dot_grpc_dot_v1_dot_kluster__pb2.CreateNamespaceResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def SyncOpenTelemetry(request,
