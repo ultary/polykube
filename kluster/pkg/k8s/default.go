@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"context"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -19,9 +20,9 @@ import (
 //  Apply (create or update) manifests
 //
 
-func (c *Client) ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, namespace string) (err error) {
+func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstructured, namespace string) (err error) {
 
-	discoveryClient := ctx.DiscoveryClient()
+	discoveryClient := c.DiscoveryClient()
 
 	gvk := obj.GroupVersionKind()
 
@@ -43,7 +44,7 @@ func (c *Client) ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, 
 		}
 	}
 
-	dynamicClient := ctx.DynamicClient()
+	dynamicClient := c.DynamicClient()
 
 	var rc dynamic.ResourceInterface
 	rc = dynamicClient.Resource(gvr)
@@ -67,9 +68,9 @@ func (c *Client) ApplyUnstructured(ctx Context, obj *unstructured.Unstructured, 
 	return nil
 }
 
-func (c *Client) ApplyNamespace(ctx Context, name string) (err error) {
+func (c *Client) ApplyNamespace(ctx context.Context, name string) (err error) {
 
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 
 	namespace := &core.Namespace{
 		ObjectMeta: meta.ObjectMeta{
@@ -100,9 +101,9 @@ func (c *Client) ApplyNamespace(ctx Context, name string) (err error) {
 
 // ---- Workloads ----
 
-func (c *Client) ApplyDeployment(ctx Context, namespace string, deployment *apps.Deployment) (err error) {
+func (c *Client) ApplyDeployment(ctx context.Context, namespace string, deployment *apps.Deployment) (err error) {
 
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 
 	if deployment.Namespace != "" {
 		namespace = deployment.Namespace
@@ -130,9 +131,9 @@ func (c *Client) ApplyDeployment(ctx Context, namespace string, deployment *apps
 	return
 }
 
-func (c *Client) ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, namespace string) (err error) {
+func (c *Client) ApplyStatefulSet(ctx context.Context, statefulSet *apps.StatefulSet, namespace string) (err error) {
 
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 
 	if statefulSet.Namespace != "" {
 		namespace = statefulSet.Namespace
@@ -162,9 +163,9 @@ func (c *Client) ApplyStatefulSet(ctx Context, statefulSet *apps.StatefulSet, na
 
 // ---- Config ----
 
-func (c *Client) ApplyConfigMap(ctx Context, namespace string, configmap *core.ConfigMap) (err error) {
+func (c *Client) ApplyConfigMap(ctx context.Context, namespace string, configmap *core.ConfigMap) (err error) {
 
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 
 	if configmap.Namespace != "" {
 		namespace = configmap.Namespace
@@ -192,24 +193,24 @@ func (c *Client) ApplyConfigMap(ctx Context, namespace string, configmap *core.C
 	return
 }
 
-func (c *Client) GetSecret(ctx Context, name, namespace string) (*core.Secret, error) {
-	client := ctx.KubernetesClientset()
+func (c *Client) GetSecret(ctx context.Context, name, namespace string) (*core.Secret, error) {
+	client := c.KubernetesClientset()
 	return client.CoreV1().Secrets(namespace).Get(ctx, name, meta.GetOptions{})
 }
 
-func (c *Client) CreateSecret(ctx Context, namespace string, secret *core.Secret) (*core.Secret, error) {
+func (c *Client) CreateSecret(ctx context.Context, namespace string, secret *core.Secret) (*core.Secret, error) {
 	if secret.Namespace != "" {
 		namespace = secret.Namespace
 	}
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 	return client.CoreV1().Secrets(namespace).Create(ctx, secret, meta.CreateOptions{})
 }
 
 // ---- Network ----
 
-func (c *Client) ApplyService(ctx Context, service *core.Service, namespace string) (err error) {
+func (c *Client) ApplyService(ctx context.Context, service *core.Service, namespace string) (err error) {
 
-	client := ctx.KubernetesClientset()
+	client := c.KubernetesClientset()
 
 	if service.Namespace != "" {
 		namespace = service.Namespace
@@ -241,13 +242,13 @@ func (c *Client) ApplyService(ctx Context, service *core.Service, namespace stri
 
 // ---- Access Control ----
 
-func (c *Client) ApplyServiceAccount(ctx Context, sa *core.ServiceAccount, namespace string) (err error) {
+func (c *Client) ApplyServiceAccount(ctx context.Context, sa *core.ServiceAccount, namespace string) (err error) {
 
 	if sa.Namespace != "" {
 		namespace = sa.Namespace
 	}
 
-	client := ctx.KubernetesClientset().CoreV1().ServiceAccounts(namespace)
+	client := c.KubernetesClientset().CoreV1().ServiceAccounts(namespace)
 
 	_, err = client.Get(ctx, sa.Name, meta.GetOptions{})
 	if err != nil {
@@ -270,9 +271,9 @@ func (c *Client) ApplyServiceAccount(ctx Context, sa *core.ServiceAccount, names
 	return
 }
 
-func (c *Client) ApplyClusterRole(ctx Context, cr *rbac.ClusterRole) (err error) {
+func (c *Client) ApplyClusterRole(ctx context.Context, cr *rbac.ClusterRole) (err error) {
 
-	client := ctx.KubernetesClientset().RbacV1().ClusterRoles()
+	client := c.KubernetesClientset().RbacV1().ClusterRoles()
 
 	_, err = client.Get(ctx, cr.Name, meta.GetOptions{})
 	if err != nil {
@@ -295,9 +296,9 @@ func (c *Client) ApplyClusterRole(ctx Context, cr *rbac.ClusterRole) (err error)
 	return
 }
 
-func (c *Client) ApplyClusterRoleBiding(ctx Context, crb *rbac.ClusterRoleBinding) (err error) {
+func (c *Client) ApplyClusterRoleBiding(ctx context.Context, crb *rbac.ClusterRoleBinding) (err error) {
 
-	client := ctx.KubernetesClientset().RbacV1().ClusterRoleBindings()
+	client := c.KubernetesClientset().RbacV1().ClusterRoleBindings()
 
 	_, err = client.Get(ctx, crb.Name, meta.GetOptions{})
 	if err != nil {

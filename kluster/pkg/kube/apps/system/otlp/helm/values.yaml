@@ -1,0 +1,267 @@
+
+nameOverride: ""
+fullnameOverride: "otel"
+
+global:
+  labels:
+    org: home
+
+
+################################################################
+##
+##  OpenTelemetry Kubernetes Agent
+##
+
+agent:
+  enabled: true
+
+  fullnameOverride: otel
+
+  mode: daemonset
+
+  namespaceOverride: kube-system
+
+  presets:
+    logsCollection:
+      enabled: true
+      includeCollectorLogs: true
+      storeCheckpoints: true
+    hostMetrics:
+      enabled: true
+    kubernetesAttributes:
+      enabled: true
+      extractAllPodLabels: true
+      extractAllPodAnnotations: true
+    kubeletMetrics:
+      enabled: true
+
+  config:
+    exporters:
+      otlp:
+        endpoint: otlp.dokevy.io:4317
+        tls:
+          insecure: true
+    processors:
+      attributes:
+        actions:
+          - action: delete
+            key: kubectl_kubernetes_io_last_applied_configuration
+          - action: insert
+            key: opentelemetry
+            value: daemonset
+    receivers:
+      jaeger: null
+      otlp: null
+      prometheus: null
+      zipkin: null
+    service:
+      pipelines:
+        logs:
+          exporters:
+            - otlp
+          processors:
+            - k8sattributes
+            - attributes
+            - memory_limiter
+            - batch
+          receivers: []
+        metrics:
+          exporters:
+            - otlp
+          processors:
+            - k8sattributes
+            - attributes
+            - memory_limiter
+            - batch
+          receivers: []
+          #   - otlp
+        traces: null
+          # exporters:
+          #   - otlp
+          # processors:
+          #   - k8sattributes
+          #   - attributes
+          #   - memory_limiter
+          #   - batch
+          # receivers: []
+          # #   - otlp
+      telemetry:
+        logs:
+          level: warn
+
+  image:
+    repository: otel/opentelemetry-collector-k8s
+    tag: 0.104.0
+
+  serviceAccount:
+    name: otel-agent
+
+  clusterRole:
+    name: otel-agent
+    clusterRoleBinding:
+      name: otel-agent
+
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+
+  service:
+    enabled: false
+
+################################################################
+##
+##  OpenTelemetry Kubernetes Collector
+##
+
+collector:
+  enabled: false
+
+  fullnameOverride: otel-collector
+
+  mode: deployment
+
+  namespaceOverride: kube-system
+
+  replicaCount: 1
+
+  presets:
+    kubernetesEvents:
+      enabled: true
+    clusterMetrics:
+      enabled: true
+
+  config:
+    exporters:
+      otlp:
+        endpoint: otlp.dokevy.io:4317
+        tls:
+          insecure: true
+    processors:
+      attributes:
+        actions:
+          - action: insert
+            key: opentelemetry
+            value: deployment
+    receivers:
+      jaeger: null
+      otlp: null
+      prometheus: null
+      zipkin: null
+    service:
+      pipelines:
+        logs:
+          exporters:
+            - otlp
+        traces:
+          exporters:
+            - otlp
+      telemetry:
+        logs:
+          level: warn
+
+  image:
+    repository: otel/opentelemetry-collector-k8s
+    tag: 0.104.0
+
+  # serviceAccount:
+  #   create: false
+  #   name: otlp-kubernetes
+
+  # clusterRole:
+  #   name: otlp-kubernetes
+
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+
+  service:
+    enabled: false
+
+################################################################
+##
+##  OpenTelemetry Kafka Consumer
+##
+
+consumer:
+  enabled: false
+
+  fullnameOverride: otel-consumer
+
+  mode: deployment
+
+  namespaceOverride: kube-system
+
+  replicaCount: 1
+
+  config:
+    exporters:
+      otlp:
+        endpoint: otlp.dokevy.io:4317
+        tls:
+          insecure: true
+    processors:
+      attributes:
+        actions:
+          - action: insert
+            key: opentelemetry
+            value: deployment
+    receivers:
+      jaeger:
+      otlp:
+      prometheus:
+      zipkin:
+    service:
+      pipelines:
+        logs:
+          exporters:
+            - otlp
+        traces:
+          exporters:
+            - otlp
+      telemetry:
+        logs:
+          level: warn
+
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: 0.104.0
+
+  serviceAccount:
+    create: false
+
+  ports:
+    otlp:
+      enabled: false
+    otlp-http:
+      enabled: false
+    jaeger-compact:
+      enabled: false
+    jaeger-thrift:
+      enabled: false
+    jaeger-grpc:
+      enabled: false
+    zipkin:
+      enabled: false
+
+  service:
+    enabled: false
