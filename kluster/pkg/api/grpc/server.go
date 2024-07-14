@@ -1,8 +1,6 @@
 package grpc
 
 import (
-	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/kube"
 	"net"
 
 	log "github.com/sirupsen/logrus"
@@ -12,24 +10,21 @@ import (
 )
 
 type Server struct {
-	v1.KlusterServer
-	v1.SystemServer
-
-	cluster *kube.Cluster
-	server  *grpc.Server
+	server *grpc.Server
 }
 
-func NewServer(client *k8s.Client) *Server {
+func NewServer() *Server {
 
 	server := grpc.NewServer()
 	retval := &Server{
-		cluster: kube.NewCluster(client),
-		server:  server,
+		server: server,
 	}
 
-	v1.RegisterKlusterServer(server, retval)
-	v1.RegisterSystemServer(server, retval)
 	return retval
+}
+
+func (s *Server) RegisterSystemServer(system v1.SystemServer) {
+	v1.RegisterSystemServer(s.server, system)
 }
 
 func (s *Server) Serve(network, address string) error {

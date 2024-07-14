@@ -16,7 +16,7 @@ import (
 //go:embed helm/*
 var chartFS embed.FS
 
-func Enable(ctx context.Context, client *k8s.Client) {
+func Enable(ctx context.Context, cluster *k8s.Cluster) {
 	rootFS, _ := fs.Sub(chartFS, "helm")
 	values := map[string]interface{}{}
 	releaseName := "otlp"
@@ -30,16 +30,16 @@ func Enable(ctx context.Context, client *k8s.Client) {
 		}
 
 		obj := &unstructured.Unstructured{Object: raw}
-		if err := client.ApplyUnstructured(ctx, obj, namespace); err != nil {
+		if err := cluster.ApplyUnstructured(ctx, obj, namespace); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}
 }
 
-func Disable(client *k8s.Client) {
+func Disable(cluster *k8s.Cluster) {
 
 }
 
-func Update(client *k8s.Client) {
+func Update(cluster *k8s.Cluster) {
 
 }

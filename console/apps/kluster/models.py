@@ -7,7 +7,7 @@ class ResourceStatus(models.Model):
     kind = models.CharField(max_length=128)
     name = models.CharField(max_length=253)
     namespace = models.CharField(max_length=63, blank=True, default='')
-    requested = models.TextField(max_length=2**20) # 1MiB
+    requested = models.JSONField(max_length=2**20) # 1MiB
     status = models.JSONField(max_length=2**21)    # 2MiB
     resource_version = models.PositiveBigIntegerField()
     uid = models.UUIDField()

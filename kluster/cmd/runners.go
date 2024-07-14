@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5/pgxpool"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"github.com/ultary/monokube/kluster/pkg/kube"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 
 	"github.com/ultary/monokube/kluster/pkg/api/grpc"
 	"github.com/ultary/monokube/kluster/pkg/api/http"
@@ -69,17 +71,44 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	//  PostgreSQL
 	//
 
+	// ---- postgresql ----
+
 	// https://www.npgsql.org/doc/connection-string-parameters.html
 	const pgdsn = "postgres://postgres:postgrespw@localhost:5432/postgres?application_name=ultary&sslmode=disable&connect_timeout=5"
-	pgconfig, err := pgxpool.ParseConfig(pgdsn)
+	//dsn := "user=youruser password=yourpassword dbname=yourdb host=localhost port=5432 sslmode=disable"
+	pgxconfig, err := pgxpool.ParseConfig(pgdsn)
 	if err != nil {
 		log.Fatal(err)
 	}
-	pgpool, err := pgxpool.NewWithConfig(context.Background(), pgconfig)
+	pgxpool, err := pgxpool.NewWithConfig(context.Background(), pgxconfig)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer pgpool.Close()
+	defer pgxpool.Close()
+
+	// --- gorm ----
+
+	// logger := logger.New(
+	// 	logrus.NewWriter(),
+	// 	logger.Config{
+	// 		SlowThreshold: time.Millisecond,
+	// 		LogLevel:      logger.Warn,
+	// 		Colorful:      false,
+	// 	},
+	// )
+
+	dsn := "host=localhost user=postgres password=postgrespw dbname=postgres port=5432 sslmode=disable TimeZone=Asia/Seoul"
+	dialector := postgres.Open(dsn)
+	gormConfig := &gorm.Config{
+		// Logger: logger,
+	}
+	db, err := gorm.Open(dialector, gormConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// if err = db.Use(tracing.NewPlugin()); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	////////////////////////////////////////////////////////////////
 	//
@@ -87,7 +116,12 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	//
 
 	client := k8s.NewClient(s.kubeconfig, s.kubecontext)
-	grpcServer := grpc.NewServer(client)
+	cluster := k8s.NewCluster(client, db)
+	system := kube.NewSystem(cluster)
+
+	grpcServer := grpc.NewServer()
+	grpcServer.RegisterSystemServer(system)
+
 	httpServer := http.NewServer()
 	watchTower := watch.NewTower(client)
 
