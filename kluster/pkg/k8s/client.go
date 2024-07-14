@@ -2,7 +2,10 @@ package k8s
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+	"net/http"
+
 	certmanagerversioned "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	log "github.com/sirupsen/logrus"
 	istioversioned "istio.io/client-go/pkg/clientset/versioned"
@@ -14,7 +17,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"net/http"
 )
 
 type Client struct {
@@ -102,10 +104,10 @@ func (c *Client) IstioClientset() *istioversioned.Clientset {
 //  Pod shell execution
 //
 
-func (c *Client) Exec(ctx Context, namespace, podName, containerName string, command []string) (string, string, error) {
+func (c *Client) Exec(ctx context.Context, namespace, podName, containerName string, command []string) (string, string, error) {
 
-	config := ctx.Config()
-	client := ctx.KubernetesClientset()
+	config := c.Config()
+	client := c.KubernetesClientset()
 
 	req := client.CoreV1().RESTClient().
 		Post().

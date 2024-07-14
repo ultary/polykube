@@ -1,5 +1,6 @@
 package apps
 
+/*
 import (
 	"errors"
 
@@ -92,3 +93,4 @@ func CreateTopic(ctx k8s.Context, topic string) error {
 	log.Info(stdout)
 	return nil
 }
+*/

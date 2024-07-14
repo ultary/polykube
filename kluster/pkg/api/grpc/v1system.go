@@ -14,8 +14,8 @@ func (s *Server) Ping(ctx context.Context, empty *emptypb.Empty) (*v1.Pong, erro
 	}, nil
 }
 
-func (s *Server) EnableOpenTelemetryCollector(context.Context, *v1.EnableOpenTelemetryCollectorRequest) (*v1.EnableOpenTelemetryCollectorResponse, error) {
-	s.cluster.System().EnableOpenTelemetryCollector()
+func (s *Server) EnableOpenTelemetryCollector(ctx context.Context, req *v1.EnableOpenTelemetryCollectorRequest) (*v1.EnableOpenTelemetryCollectorResponse, error) {
+	s.cluster.System().EnableOpenTelemetryCollector(ctx)
 	return &v1.EnableOpenTelemetryCollectorResponse{}, nil
 }
 

@@ -1,5 +1,6 @@
 package net
 
+/*
 import (
 	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	log "github.com/sirupsen/logrus"
@@ -46,3 +47,4 @@ func (g *Gateway) Apply(ctx k8s.Context, namespace string) error {
 
 	return nil
 }
+*/

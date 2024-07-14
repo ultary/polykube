@@ -1,8 +1,10 @@
 package otlp
 
 import (
+	"context"
 	"embed"
 	"io/fs"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
@@ -14,7 +16,7 @@ import (
 //go:embed helm/*
 var chartFS embed.FS
 
-func Enable(client *k8s.Client) {
+func Enable(ctx context.Context, client *k8s.Client) {
 	rootFS, _ := fs.Sub(chartFS, "helm")
 	values := map[string]interface{}{}
 	releaseName := "otlp"
@@ -27,10 +29,10 @@ func Enable(client *k8s.Client) {
 			log.Fatalf("Failed to unmarshal YAML: %v", err)
 		}
 
-		// obj := &unstructured.Unstructured{Object: raw}
-		// if err := client.ApplyUnstructured(nil, obj, namespace); err != nil {
-		// 	log.Fatalf("%v", err)
-		// }
+		obj := &unstructured.Unstructured{Object: raw}
+		if err := client.ApplyUnstructured(ctx, obj, namespace); err != nil {
+			log.Fatalf("%v", err)
+		}
 	}
 }
 

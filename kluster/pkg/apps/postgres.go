@@ -1,5 +1,6 @@
 package apps
 
+/*
 import (
 	log "github.com/sirupsen/logrus"
 	apps "k8s.io/api/apps/v1"
@@ -77,3 +78,4 @@ func (p *PostgreSQL) Apply(ctx k8s.Context, namespace string) error {
 
 	return nil
 }
+*/

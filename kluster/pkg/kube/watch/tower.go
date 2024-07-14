@@ -4,13 +4,11 @@ import (
 	"slices"
 	"time"
 
-	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	certmanagerinformers "github.com/cert-manager/cert-manager/pkg/client/informers/externalversions"
 	log "github.com/sirupsen/logrus"
-	istio "istio.io/client-go/pkg/apis/networking/v1beta1"
 	istioinformers "istio.io/client-go/pkg/informers/externalversions"
-	apps "k8s.io/api/apps/v1"
-	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -91,34 +89,34 @@ func (t *Tower) Watch() {
 			break
 		}
 
-		key, err := cache.MetaNamespaceKeyFunc(obj)
-		if err != nil {
-			log.SetReportCaller(true)
-			log.Fatalf("Error")
-		}
+		// key, err := cache.MetaNamespaceKeyFunc(obj)
+		// if err != nil {
+		// 	log.SetReportCaller(true)
+		// 	log.Fatalf("Error")
+		// }
 
-		switch obj.(type) {
-		case *core.ConfigMap:
-			log.Printf("Processing change to ConfigMap: %s\n", key)
-		case *core.Secret:
-			log.Printf("Processing change to Secret: %s\n", key)
-		case *apps.Deployment:
-			log.Printf("Processing change to Deployment: %s\n", key)
-		case *apps.StatefulSet:
-			log.Printf("Processing change to StatefulSet: %s\n", key)
-		case *apps.DaemonSet:
-			log.Printf("Processing change to DaemonSet: %s\n", key)
-		case *istio.Gateway:
-			log.Printf("Processing change to Istio/Gateway: %s\n", key)
-		case *istio.VirtualService:
-			log.Printf("Processing change to Istio/VirtualService: %s\n", key)
-		case *certmanager.Certificate:
-			log.Printf("Processing change to CertManager/Certificate: %s\n", key)
-		case *certmanager.ClusterIssuer:
-			log.Printf("Processing change to CertManager/ClusterIssuer: %s\n", key)
-		case *certmanager.Issuer:
-			log.Printf("Processing change to CertManager/Issuer: %s\n", key)
-		}
+		// switch obj.(type) {
+		// case *core.ConfigMap:
+		// 	log.Printf("Processing change to ConfigMap: %s\n", key)
+		// case *core.Secret:
+		// 	log.Printf("Processing change to Secret: %s\n", key)
+		// case *apps.Deployment:
+		// 	log.Printf("Processing change to Deployment: %s\n", key)
+		// case *apps.StatefulSet:
+		// 	log.Printf("Processing change to StatefulSet: %s\n", key)
+		// case *apps.DaemonSet:
+		// 	log.Printf("Processing change to DaemonSet: %s\n", key)
+		// case *istio.Gateway:
+		// 	log.Printf("Processing change to Istio/Gateway: %s\n", key)
+		// case *istio.VirtualService:
+		// 	log.Printf("Processing change to Istio/VirtualService: %s\n", key)
+		// case *certmanager.Certificate:
+		// 	log.Printf("Processing change to CertManager/Certificate: %s\n", key)
+		// case *certmanager.ClusterIssuer:
+		// 	log.Printf("Processing change to CertManager/ClusterIssuer: %s\n", key)
+		// case *certmanager.Issuer:
+		// 	log.Printf("Processing change to CertManager/Issuer: %s\n", key)
+		// }
 
 		t.queue.Done(obj)
 	}
@@ -136,26 +134,33 @@ func (t *Tower) Shutdown() {
 }
 
 func (t *Tower) onAdd(obj interface{}) {
-	// key, err := cache.MetaNamespaceKeyFunc(obj)
-	// if err == nil {
-	// 	//t.queue.Add(key)
-	// 	log.Printf("Add: %s", key)
-	// }
+	//updateLastResourceTypeChanged(obj)
+
 	t.queue.Add(obj)
 }
 
 func (t *Tower) onUpdate(oldObj, newObj interface{}) {
-	// o, _ := cache.MetaNamespaceKeyFunc(oldObj)
-	// n, _ := cache.MetaNamespaceKeyFunc(newObj)
-	// log.Printf("Update: %s → %s", o, n)
+	//updateLastResourceTypeChanged(newObj)
+
 	t.queue.Add(newObj)
 }
 
 func (t *Tower) onDelete(obj interface{}) {
-	// key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-	// if err == nil {
-	// 	//t.queue.Add(key)
-	// 	log.Printf("Delete: %s", key)
-	// }
+	//updateLastResourceTypeChanged(obj)
+
 	t.queue.Add(obj)
+}
+
+func updateLastResourceTypeChanged(obj interface{}) {
+	metaObj, _ := meta.Accessor(obj)
+	runtimeObj, _ := obj.(runtime.Object)
+	typeObj, _ := meta.TypeAccessor(runtimeObj)
+
+	log.Printf("ApiVersion: %s, Kind: %s, Name: %s, Namespace: %s, UID: %s, ResourceVersion: %s\n",
+		typeObj.GetAPIVersion(),
+		typeObj.GetKind(),
+		metaObj.GetName(),
+		metaObj.GetNamespace(),
+		metaObj.GetUID(),
+		metaObj.GetResourceVersion())
 }

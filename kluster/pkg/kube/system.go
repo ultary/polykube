@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"context"
 	"github.com/ultary/monokube/kluster/pkg/k8s"
 	"github.com/ultary/monokube/kluster/pkg/kube/apps/system/otlp"
 )
@@ -18,8 +19,8 @@ func NewSystem(client *k8s.Client) *system {
 func (s *system) Initialize() {
 }
 
-func (s *system) EnableOpenTelemetryCollector() {
-	otlp.Enable(s.client)
+func (s *system) EnableOpenTelemetryCollector(ctx context.Context) {
+	otlp.Enable(ctx, s.client)
 }
 
 func (s *system) DisableOpenTelemetryCollector() {

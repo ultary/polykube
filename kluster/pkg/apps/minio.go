@@ -1,5 +1,6 @@
 package apps
 
+/*
 import (
 	log "github.com/sirupsen/logrus"
 	istio "istio.io/client-go/pkg/apis/networking/v1"
@@ -92,3 +93,4 @@ func (m *MinIO) Apply(ctx k8s.Context, namespace string) error {
 func (m *MinIO) CreateAccessKey(ctx k8s.Context, name, bucket string) (accessKey, secretKey string, err error) {
 	return "", "", nil
 }
+*/
