@@ -26,22 +26,8 @@ func main() {
 	kubeconfig = *rootCmd.PersistentFlags().String("kubeconfig", kubeconfig, "(optional) absolute path to the kubeconfig file")
 	kubecontext = *rootCmd.PersistentFlags().String("kubecontext", kubecontext, "(optional) The name of the kubeconfig context to use")
 
-	runners := []Runner{
-		&installer{},
-		&server{
-			incluster:   incluster,
-			kubeconfig:  kubeconfig,
-			kubecontext: kubecontext,
-		},
-	}
-
-	for _, r := range runners {
-		rootCmd.AddCommand(&cobra.Command{
-			Use:   r.Use(),
-			Short: r.Short(),
-			Run:   r.Run,
-		})
-	}
+	rootCmd.AddCommand(NewInstallCommand(incluster, kubeconfig, kubecontext))
+	rootCmd.AddCommand(NewServeCommand(incluster, kubeconfig, kubecontext))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

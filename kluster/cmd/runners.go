@@ -2,43 +2,50 @@ package main
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgxpool"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/ultary/monokube/kluster/pkg/kube"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/ultary/monokube/kluster/pkg/api/grpc"
 	"github.com/ultary/monokube/kluster/pkg/api/http"
 	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/kube"
 	"github.com/ultary/monokube/kluster/pkg/kube/watch"
 )
-
-type Runner interface {
-	Use() string
-	Short() string
-	Run(cmd *cobra.Command, args []string)
-}
 
 ////////////////////////////////////////////////////////////////
 //
 //  Installer
 //
 
+func NewInstallCommand(incluster bool, kubeconfig, kubecontext string) *cobra.Command {
+
+	i := &installer{
+		incluster:   incluster,
+		kubeconfig:  kubeconfig,
+		kubecontext: kubecontext,
+	}
+
+	cmd := &cobra.Command{
+		Use:   "install",
+		Short: "Run monokube's kluster installer",
+		Run:   i.Run,
+	}
+
+	return cmd
+}
+
 type installer struct {
-}
-
-func (i *installer) Use() string {
-	return "install"
-}
-
-func (i *installer) Short() string {
-	return "Run monokube's kluster installer"
+	incluster   bool
+	kubeconfig  string
+	kubecontext string
 }
 
 func (i *installer) Run(cmd *cobra.Command, args []string) {
@@ -50,18 +57,30 @@ func (i *installer) Run(cmd *cobra.Command, args []string) {
 //  Server
 //
 
+func NewServeCommand(incluster bool, kubeconfig, kubecontext string) *cobra.Command {
+
+	s := &server{
+		incluster:   incluster,
+		kubeconfig:  kubeconfig,
+		kubecontext: kubecontext,
+	}
+
+	cmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Run monokube's kluster server",
+		Run:   s.Run,
+	}
+
+	cmd.PersistentFlags().BoolVarP(&s.watchable, "watch", "w", false, "(optional) Watch kubernetes resource event and save status")
+
+	return cmd
+}
+
 type server struct {
 	incluster   bool
 	kubeconfig  string
 	kubecontext string
-}
-
-func (s *server) Use() string {
-	return "serve"
-}
-
-func (s *server) Short() string {
-	return "Run monokube's kluster server"
+	watchable   bool
 }
 
 func (s *server) Run(cmd *cobra.Command, args []string) {
