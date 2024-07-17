@@ -1,76 +1,44 @@
 package watch
 
 import (
-	"slices"
+	"strconv"
 	"time"
 
-	certmanagerinformers "github.com/cert-manager/cert-manager/pkg/client/informers/externalversions"
 	log "github.com/sirupsen/logrus"
-	istioinformers "istio.io/client-go/pkg/informers/externalversions"
+	"gorm.io/gorm"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
+	"github.com/ultary/monokube/kluster/pkg/db/models"
 	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/monokube/kluster/pkg/k8s/ext"
 )
 
 type startFunc func(<-chan struct{})
 type shutdownFuc func()
 
 type Tower struct {
-	queue         workqueue.RateLimitingInterface
-	stop          chan struct{}
-	startFuncs    []startFunc
-	shutdownFuncs []shutdownFuc
+	db        *gorm.DB
+	informers []ext.Informer
+	queue     workqueue.RateLimitingInterface
+	stop      chan struct{}
 }
 
-func NewTower(client *k8s.Client) *Tower {
+func NewTower(cluster *k8s.Cluster, db *gorm.DB) *Tower {
 
-	const resyncDuration = 30 * time.Second
+	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
-	clientset := client.KubernetesClientset()
-	factory := informers.NewSharedInformerFactory(clientset, resyncDuration)
-
-	// cert-manager
-	certmanagerClientset := client.CertManagerClientset()
-	certmanagerFactory := certmanagerinformers.NewSharedInformerFactory(certmanagerClientset, resyncDuration)
-
-	// istio
-	istioClientset := client.IstioClientset()
-	istioFactory := istioinformers.NewSharedInformerFactory(istioClientset, resyncDuration)
+	informers := []ext.Informer{
+		cluster.Informer(queue),
+		cluster.CertManager().Informer(queue),
+		cluster.Istio().Informer(queue),
+	}
 
 	retval := &Tower{
-		queue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
-		startFuncs: []startFunc{
-			factory.Start,
-			certmanagerFactory.Start,
-			istioFactory.Start,
-		},
-		shutdownFuncs: []shutdownFuc{
-			istioFactory.Shutdown,
-			certmanagerFactory.Shutdown,
-			factory.Shutdown,
-		},
-	}
-
-	adders := slices.Concat(
-		getAddEventHanders(factory),
-		getCertManagerAddEventHandlers(certmanagerFactory),
-		getIstioAddEventHandlers(istioFactory))
-
-	handler := cache.ResourceEventHandlerFuncs{
-		AddFunc:    retval.onAdd,
-		UpdateFunc: retval.onUpdate,
-		DeleteFunc: retval.onDelete,
-	}
-
-	for _, AddEventHandler := range adders {
-		if _, err := AddEventHandler(handler); err != nil {
-			log.SetReportCaller(true)
-			log.Fatalf("Failed event handler registration: %v", err)
-		}
+		db:        db,
+		informers: informers,
+		queue:     queue,
 	}
 
 	return retval
@@ -79,8 +47,8 @@ func NewTower(client *k8s.Client) *Tower {
 func (t *Tower) Watch() {
 
 	t.stop = make(chan struct{})
-	for _, start := range t.startFuncs {
-		start(t.stop)
+	for _, informer := range t.informers {
+		informer.Start(t.stop)
 	}
 
 	for {
@@ -118,6 +86,8 @@ func (t *Tower) Watch() {
 		// 	log.Printf("Processing change to CertManager/Issuer: %s\n", key)
 		// }
 
+		updateLastResourceTypeChanged(t.db, obj)
+
 		t.queue.Done(obj)
 	}
 }
@@ -126,32 +96,14 @@ func (t *Tower) Shutdown() {
 	log.Info("[Tower] Stopping process")
 
 	close(t.stop)
-	for _, shutdown := range t.shutdownFuncs {
-		shutdown()
+	for _, informer := range t.informers {
+		informer.Shutdown()
 	}
 
 	log.Info("[Tower] Stopped process")
 }
 
-func (t *Tower) onAdd(obj interface{}) {
-	//updateLastResourceTypeChanged(obj)
-
-	t.queue.Add(obj)
-}
-
-func (t *Tower) onUpdate(oldObj, newObj interface{}) {
-	//updateLastResourceTypeChanged(newObj)
-
-	t.queue.Add(newObj)
-}
-
-func (t *Tower) onDelete(obj interface{}) {
-	//updateLastResourceTypeChanged(obj)
-
-	t.queue.Add(obj)
-}
-
-func updateLastResourceTypeChanged(obj interface{}) {
+func updateLastResourceTypeChanged(db *gorm.DB, obj interface{}) error {
 	metaObj, _ := meta.Accessor(obj)
 	runtimeObj, _ := obj.(runtime.Object)
 	typeObj, _ := meta.TypeAccessor(runtimeObj)
@@ -163,4 +115,15 @@ func updateLastResourceTypeChanged(obj interface{}) {
 		metaObj.GetNamespace(),
 		metaObj.GetUID(),
 		metaObj.GetResourceVersion())
+
+	rv, err := strconv.ParseUint(metaObj.GetResourceVersion(), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	row := &models.LatestRsourceKindVersion{
+		ResourceVersion: rv,
+		UpdatedAt:       time.Now(),
+	}
+	return db.Save(row).Error
 }

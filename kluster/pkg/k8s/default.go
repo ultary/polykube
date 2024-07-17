@@ -2,8 +2,6 @@ package k8s
 
 import (
 	"context"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,6 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"strings"
 )
 
 ////////////////////////////////////////////////////////////////
@@ -21,9 +20,9 @@ import (
 //  Apply (create or update) manifests
 //
 
-func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstructured, namespace string) (err error) {
+func (c *Cluster) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstructured, namespace string) (err error) {
 
-	discoveryClient := c.DiscoveryClient()
+	discoveryClient := c.client.DiscoveryClient()
 
 	gvk := obj.GroupVersionKind()
 
@@ -45,7 +44,7 @@ func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstru
 		}
 	}
 
-	dynamicClient := c.DynamicClient()
+	dynamicClient := c.client.DynamicClient()
 
 	var rc dynamic.ResourceInterface
 	rc = dynamicClient.Resource(gvr)
@@ -82,9 +81,9 @@ func (c *Client) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstru
 	return nil
 }
 
-func (c *Client) ApplyNamespace(ctx context.Context, name string) (err error) {
+func (c *Cluster) ApplyNamespace(ctx context.Context, name string) (err error) {
 
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 
 	namespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -115,9 +114,9 @@ func (c *Client) ApplyNamespace(ctx context.Context, name string) (err error) {
 
 // ---- Workloads ----
 
-func (c *Client) ApplyDeployment(ctx context.Context, namespace string, deployment *appsv1.Deployment) (err error) {
+func (c *Cluster) ApplyDeployment(ctx context.Context, namespace string, deployment *appsv1.Deployment) (err error) {
 
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 
 	if deployment.Namespace != "" {
 		namespace = deployment.Namespace
@@ -145,9 +144,9 @@ func (c *Client) ApplyDeployment(ctx context.Context, namespace string, deployme
 	return
 }
 
-func (c *Client) ApplyStatefulSet(ctx context.Context, statefulSet *appsv1.StatefulSet, namespace string) (err error) {
+func (c *Cluster) ApplyStatefulSet(ctx context.Context, statefulSet *appsv1.StatefulSet, namespace string) (err error) {
 
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 
 	if statefulSet.Namespace != "" {
 		namespace = statefulSet.Namespace
@@ -177,9 +176,9 @@ func (c *Client) ApplyStatefulSet(ctx context.Context, statefulSet *appsv1.State
 
 // ---- Config ----
 
-func (c *Client) ApplyConfigMap(ctx context.Context, namespace string, configmap *corev1.ConfigMap) (err error) {
+func (c *Cluster) ApplyConfigMap(ctx context.Context, namespace string, configmap *corev1.ConfigMap) (err error) {
 
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 
 	if configmap.Namespace != "" {
 		namespace = configmap.Namespace
@@ -207,24 +206,24 @@ func (c *Client) ApplyConfigMap(ctx context.Context, namespace string, configmap
 	return
 }
 
-func (c *Client) GetSecret(ctx context.Context, name, namespace string) (*corev1.Secret, error) {
-	client := c.KubernetesClientset()
+func (c *Cluster) GetSecret(ctx context.Context, name, namespace string) (*corev1.Secret, error) {
+	client := c.client.KubernetesClientset()
 	return client.CoreV1().Secrets(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-func (c *Client) CreateSecret(ctx context.Context, namespace string, secret *corev1.Secret) (*corev1.Secret, error) {
+func (c *Cluster) CreateSecret(ctx context.Context, namespace string, secret *corev1.Secret) (*corev1.Secret, error) {
 	if secret.Namespace != "" {
 		namespace = secret.Namespace
 	}
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 	return client.CoreV1().Secrets(namespace).Create(ctx, secret, metav1.CreateOptions{})
 }
 
 // ---- Network ----
 
-func (c *Client) ApplyService(ctx context.Context, service *corev1.Service, namespace string) (err error) {
+func (c *Cluster) ApplyService(ctx context.Context, service *corev1.Service, namespace string) (err error) {
 
-	client := c.KubernetesClientset()
+	client := c.client.KubernetesClientset()
 
 	if service.Namespace != "" {
 		namespace = service.Namespace
@@ -256,13 +255,13 @@ func (c *Client) ApplyService(ctx context.Context, service *corev1.Service, name
 
 // ---- Access Control ----
 
-func (c *Client) ApplyServiceAccount(ctx context.Context, sa *corev1.ServiceAccount, namespace string) (err error) {
+func (c *Cluster) ApplyServiceAccount(ctx context.Context, sa *corev1.ServiceAccount, namespace string) (err error) {
 
 	if sa.Namespace != "" {
 		namespace = sa.Namespace
 	}
 
-	client := c.KubernetesClientset().CoreV1().ServiceAccounts(namespace)
+	client := c.client.KubernetesClientset().CoreV1().ServiceAccounts(namespace)
 
 	_, err = client.Get(ctx, sa.Name, metav1.GetOptions{})
 	if err != nil {
@@ -285,9 +284,9 @@ func (c *Client) ApplyServiceAccount(ctx context.Context, sa *corev1.ServiceAcco
 	return
 }
 
-func (c *Client) ApplyClusterRole(ctx context.Context, cr *rbacv1.ClusterRole) (err error) {
+func (c *Cluster) ApplyClusterRole(ctx context.Context, cr *rbacv1.ClusterRole) (err error) {
 
-	client := c.KubernetesClientset().RbacV1().ClusterRoles()
+	client := c.client.KubernetesClientset().RbacV1().ClusterRoles()
 
 	_, err = client.Get(ctx, cr.Name, metav1.GetOptions{})
 	if err != nil {
@@ -310,9 +309,9 @@ func (c *Client) ApplyClusterRole(ctx context.Context, cr *rbacv1.ClusterRole) (
 	return
 }
 
-func (c *Client) ApplyClusterRoleBiding(ctx context.Context, crb *rbacv1.ClusterRoleBinding) (err error) {
+func (c *Cluster) ApplyClusterRoleBiding(ctx context.Context, crb *rbacv1.ClusterRoleBinding) (err error) {
 
-	client := c.KubernetesClientset().RbacV1().ClusterRoleBindings()
+	client := c.client.KubernetesClientset().RbacV1().ClusterRoleBindings()
 
 	_, err = client.Get(ctx, crb.Name, metav1.GetOptions{})
 	if err != nil {

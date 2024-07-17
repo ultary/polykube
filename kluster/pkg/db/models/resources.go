@@ -1,4 +1,4 @@
-package db
+package models
 
 import (
 	"github.com/google/uuid"
@@ -16,10 +16,19 @@ type Resource struct {
 	Status          map[string]interface{} `gorm:"column:status;type:jsonb"`
 	ResourceVersion uint64                 `gorm:"column:resource_version"`
 	UID             uuid.UUID              `gorm:"column:uid;type:uuid"`
-	CreatedAt       time.Time              `gorm:"column:uid;type:timestamp with time zone;default:current_timestamp"`
-	UpdatedAt       time.Time              `gorm:"column:uid;type:timestamp with time zone;default:current_timestamp on update current_timestamp"`
+	CreatedAt       time.Time              `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt       time.Time              `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (Resource) TableName() string {
 	return "kluster_resources_status"
+}
+
+type LatestRsourceKindVersion struct {
+	ResourceVersion uint64    `gorm:"column:resource_version;primaryKey"`
+	UpdatedAt       time.Time `gorm:"column:updated_at;autoUpdateTime"`
+}
+
+func (LatestRsourceKindVersion) TableName() string {
+	return "kluster_latest_event_resource_version"
 }

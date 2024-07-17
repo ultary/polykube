@@ -1,65 +1,29 @@
-package k8s
+package istio
 
 import (
 	"context"
 	"reflect"
 
-	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	log "github.com/sirupsen/logrus"
 	istio "istio.io/client-go/pkg/apis/networking/v1"
+	"istio.io/client-go/pkg/clientset/versioned"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-////////////////////////////////////////////////////////////////
-//
-//  Cert Manager
-//
-
-func (c *Cluster) ApplyCertificate(ctx context.Context, certificate *certmanager.Certificate, namespace string) error {
-
-	client := c.client.CertManagerClientset()
-
-	if certificate.Namespace != "" {
-		namespace = certificate.Namespace
-	}
-
-	current, err := client.CertmanagerV1().Certificates(namespace).Get(ctx, certificate.Name, metav1.GetOptions{})
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return err
-		}
-
-		if _, err = client.CertmanagerV1().Certificates(namespace).Create(ctx, certificate, metav1.CreateOptions{}); err != nil {
-			log.Errorf("error creating Certificate: %v", err)
-			return err
-		}
-
-		return nil
-	}
-
-	if reflect.DeepEqual(certificate.Spec, current.Spec) {
-		log.Println("Certificate is already up-to-date")
-		return nil
-	}
-
-	certificate.ResourceVersion = current.ResourceVersion
-	_, err = client.CertmanagerV1().Certificates(namespace).Update(ctx, certificate, metav1.UpdateOptions{})
-	if err == nil {
-		return nil
-	}
-
-	return nil
+type Client struct {
+	clientset *versioned.Clientset
 }
 
-////////////////////////////////////////////////////////////////
-//
-//  Istio
-//
+func NewClient(clientset *versioned.Clientset) *Client {
+	return &Client{
+		clientset: clientset,
+	}
+}
 
-func (c *Cluster) ApplyGateway(ctx context.Context, gateway *istio.Gateway, namespace string) error {
+func (c *Client) ApplyGateway(ctx context.Context, gateway *istio.Gateway, namespace string) error {
 
-	client := c.client.IstioClientset()
+	client := c.clientset
 
 	if gateway.Namespace != "" {
 		namespace = gateway.Namespace
@@ -93,9 +57,9 @@ func (c *Cluster) ApplyGateway(ctx context.Context, gateway *istio.Gateway, name
 	return nil
 }
 
-func (c *Cluster) ApplyVirtualService(ctx context.Context, virtualService *istio.VirtualService, namespace string) error {
+func (c *Client) ApplyVirtualService(ctx context.Context, virtualService *istio.VirtualService, namespace string) error {
 
-	client := c.client.IstioClientset()
+	client := c.clientset
 
 	if virtualService.Namespace != "" {
 		namespace = virtualService.Namespace

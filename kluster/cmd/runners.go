@@ -142,7 +142,7 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	grpcServer.RegisterSystemServer(system)
 
 	httpServer := http.NewServer()
-	watchTower := watch.NewTower(client)
+	watchTower := watch.NewTower(cluster, db)
 
 	var wg sync.WaitGroup
 

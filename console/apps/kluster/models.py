@@ -18,3 +18,15 @@ class ResourceStatus(models.Model):
         app_label = 'kluster'
         db_table = u'kluster_resources_status'
         unique_together = ['api_group', 'kind', 'name', 'namespace', 'uid']
+
+
+class LatestRsourceKindVersion(models.Model):
+    resource_version = models.PositiveBigIntegerField(primary_key=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'kluster'
+        db_table = u'kluster_latest_event_resource_version'
+        indexes = [
+            models.Index(fields=['updated_at']),
+        ]
