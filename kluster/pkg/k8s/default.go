@@ -2,7 +2,13 @@ package k8s
 
 import (
 	"context"
+	"encoding/json"
+	stderrors "errors"
+	"strings"
+
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -12,7 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"strings"
+
+	"github.com/ultary/monokube/kluster/pkg/db/models"
 )
 
 ////////////////////////////////////////////////////////////////
@@ -78,6 +85,42 @@ func (c *Cluster) ApplyUnstructured(ctx context.Context, obj *unstructured.Unstr
 	log.Infof("uid: %s\n", metaObj.GetUID())
 	log.Infof("resourceVersion: %s\n", metaObj.GetResourceVersion())
 
+	uuid, err := uuid.Parse(string(appliedObj.GetUID()))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	row := &models.Resource{}
+	err = c.db.Where("uid = ?", uuid).First(row).Error
+	if err == nil {
+		// TODO: update
+		return nil
+	}
+
+	if stderrors.Is(err, gorm.ErrRecordNotFound) {
+		var raw json.RawMessage
+		raw, err = json.Marshal(obj)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		row = &models.Resource{
+			APIGroup:   obj.GroupVersionKind().Group,
+			APIVersion: obj.GetAPIVersion(),
+			Kind:       obj.GetKind(),
+			Name:       obj.GetName(),
+			Namespace:  obj.GetNamespace(),
+			Manifest:   raw,
+			UID:        uuid,
+		}
+		if err = c.db.Create(row).Error; err != nil {
+			log.Fatalf("Failed to create resource: %v", err)
+		}
+
+		return nil
+	}
+
+	log.Fatalf("Failed to find resource: %v", err)
 	return nil
 }
 

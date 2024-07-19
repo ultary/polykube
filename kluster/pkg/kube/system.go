@@ -7,7 +7,7 @@ import (
 
 	"github.com/ultary/monokube/kluster/api/grpc/v1"
 	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/kube/apps/system/otlp"
+	"github.com/ultary/monokube/kluster/pkg/kube/system/otlp"
 )
 
 //var _ v1.SystemServer = System{}

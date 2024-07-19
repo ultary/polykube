@@ -74,24 +74,14 @@ agent:
             - memory_limiter
             - batch
           receivers: []
-          #   - otlp
         traces: null
-          # exporters:
-          #   - otlp
-          # processors:
-          #   - k8sattributes
-          #   - attributes
-          #   - memory_limiter
-          #   - batch
-          # receivers: []
-          # #   - otlp
       telemetry:
         logs:
           level: warn
 
   image:
     repository: otel/opentelemetry-collector-k8s
-    tag: 0.104.0
+    tag: 0.105.0
 
   serviceAccount:
     name: otel-agent
@@ -124,7 +114,7 @@ agent:
 ##
 
 collector:
-  enabled: false
+  enabled: true
 
   fullnameOverride: otel-collector
 
@@ -162,23 +152,27 @@ collector:
         logs:
           exporters:
             - otlp
-        traces:
+          processors:
+            - attributes
+            - memory_limiter
+            - batch
+          receivers: []
+        metrics:
           exporters:
             - otlp
+          processors:
+            - attributes
+            - memory_limiter
+            - batch
+          receivers: []
+        traces: null
       telemetry:
         logs:
           level: warn
 
   image:
     repository: otel/opentelemetry-collector-k8s
-    tag: 0.104.0
-
-  # serviceAccount:
-  #   create: false
-  #   name: otlp-kubernetes
-
-  # clusterRole:
-  #   name: otlp-kubernetes
+    tag: 0.105.0
 
   ports:
     otlp:
@@ -244,7 +238,7 @@ consumer:
 
   image:
     repository: otel/opentelemetry-collector-contrib
-    tag: 0.104.0
+    tag: 0.105.0
 
   serviceAccount:
     create: false
