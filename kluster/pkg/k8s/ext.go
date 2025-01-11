@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"github.com/ultary/monokube/kluster/pkg/k8s/ext/certmanager"
-	"github.com/ultary/monokube/kluster/pkg/k8s/ext/istio"
+	"github.com/ultary/polykube/kluster/pkg/k8s/ext/certmanager"
+	"github.com/ultary/polykube/kluster/pkg/k8s/ext/istio"
 )
 
 func (c *Cluster) CertManager() *certmanager.Client {

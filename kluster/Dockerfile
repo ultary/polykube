@@ -12,7 +12,7 @@ COPY go.mod go.sum ./
 RUN  go mod download
 
 COPY . .
-RUN  go build -o monokube ./cmd/server
+RUN  go build -o polykube ./cmd/server
 
 
 FROM alpine:3.20.1 AS release
@@ -21,6 +21,6 @@ LABEL co.ultary.image.authors="ghilbut@gmail.com"
 EXPOSE 9090
 EXPOSE 50051
 
-CMD ["monokube", "serve"]
+CMD ["polykube", "serve"]
 
-COPY --from=builder /app/monokube /usr/local/bin/monokube
+COPY --from=builder /app/polykube /usr/local/bin/polykube

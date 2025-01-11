@@ -6,13 +6,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/ultary/monokube/kluster/pkg/apps"
-	"github.com/ultary/monokube/kluster/pkg/helm"
+	"github.com/ultary/polykube/kluster/pkg/apps"
+	"github.com/ultary/polykube/kluster/pkg/helm"
 )
 
 type ApplyCommand struct {

@@ -39,7 +39,7 @@ spec:
             - name: KAFKA_LISTENERS
               value: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093'
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: 'PLAINTEXT://kafka-0.kafka.monokube.svc.cluster.local:9092'
+              value: 'PLAINTEXT://kafka-0.kafka.polykube.svc.cluster.local:9092'
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
               value: '1@localhost:9093'
             - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
@@ -95,7 +95,7 @@ spec:
             - name: LOGGING_LEVEL_COM_PROVECTUS
               value: warn
             - name: KAFKA_CLUSTERS_0_NAME
-              value: monokube
+              value: polykube
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
               value: 'localhost:9092'
             - name: KAFKA_CLUSTERS_0_READONLY
@@ -155,7 +155,7 @@ metadata:
   name: kafka
 spec:
   gateways:
-    - monokube
+    - polykube
   hosts:
     - kafka.{{ .Values.domains.root }}
   http:

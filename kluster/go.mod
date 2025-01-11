@@ -1,4 +1,4 @@
-module github.com/ultary/monokube/kluster
+module github.com/ultary/polykube/kluster
 
 go 1.22.0
 
@@ -15,7 +15,6 @@ require (
 	google.golang.org/protobuf v1.34.2
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
-	gorm.io/plugin/opentelemetry v0.1.4
 	helm.sh/helm/v3 v3.15.2
 	istio.io/client-go v1.22.1
 	k8s.io/api v0.30.1

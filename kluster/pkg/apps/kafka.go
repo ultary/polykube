@@ -10,7 +10,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
 )
 
 type Kafka struct {
@@ -63,7 +63,7 @@ func (k *Kafka) Apply(ctx k8s.Context, namespace string) error {
 func CreateTopic(ctx k8s.Context, topic string) error {
 
 	const (
-		namespace     = "monokube"
+		namespace     = "polykube"
 		podName       = "kafka-0"
 		containerName = "kafka"
 	)

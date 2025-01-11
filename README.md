@@ -1,1 +1,1 @@
-# monokube
+# polykube

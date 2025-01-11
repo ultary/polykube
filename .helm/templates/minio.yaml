@@ -111,7 +111,7 @@ metadata:
   name: minio
 spec:
   gateways:
-    - monokube
+    - polykube
   hosts:
     - minio.{{ .Values.domains.root }}
   http:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/ultary/polykube/kluster/pkg/helm"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,11 +14,11 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/ultary/monokube/kluster/pkg/api/grpc"
-	"github.com/ultary/monokube/kluster/pkg/api/http"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/kube"
-	"github.com/ultary/monokube/kluster/pkg/kube/watch"
+	"github.com/ultary/polykube/kluster/pkg/api/grpc"
+	"github.com/ultary/polykube/kluster/pkg/api/http"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/kube/system"
+	"github.com/ultary/polykube/kluster/pkg/kube/watch"
 )
 
 ////////////////////////////////////////////////////////////////
@@ -35,7 +36,7 @@ func NewInstallCommand(incluster bool, kubeconfig, kubecontext string) *cobra.Co
 
 	cmd := &cobra.Command{
 		Use:   "install",
-		Short: "Run monokube's kluster installer",
+		Short: "Run ultary's core installer",
 		Run:   i.Run,
 	}
 
@@ -50,6 +51,8 @@ type installer struct {
 
 func (i *installer) Run(cmd *cobra.Command, args []string) {
 	log.Info("Install")
+
+	helm.BuildFromRepository()
 }
 
 ////////////////////////////////////////////////////////////////
@@ -67,11 +70,12 @@ func NewServeCommand(incluster bool, kubeconfig, kubecontext string) *cobra.Comm
 
 	cmd := &cobra.Command{
 		Use:   "serve",
-		Short: "Run monokube's kluster server",
+		Short: "Run ultary's core server",
 		Run:   s.Run,
 	}
 
-	cmd.PersistentFlags().BoolVarP(&s.watchable, "watch", "w", false, "(optional) Watch kubernetes resource event and save status")
+	// cmd.PersistentFlags().BoolVarP(&s.manager, "manager", "m", false, "(optional) Apply and update kubernetes manifests")
+	// cmd.PersistentFlags().BoolVarP(&s.watcher, "watcher", "w", false, "(optional) Watch kubernetes resource event and save status")
 
 	return cmd
 }
@@ -80,10 +84,14 @@ type server struct {
 	incluster   bool
 	kubeconfig  string
 	kubecontext string
-	watchable   bool
+
+	// manager bool
+	// watcher bool
 }
 
 func (s *server) Run(cmd *cobra.Command, args []string) {
+
+	log.SetLevel(log.DebugLevel)
 
 	////////////////////////////////////////////////////////////////
 	//
@@ -136,10 +144,12 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 
 	client := k8s.NewClient(s.kubeconfig, s.kubecontext)
 	cluster := k8s.NewCluster(client, db)
-	system := kube.NewSystem(cluster)
+
+	systemServer := system.NewServer(cluster)
+	systemManager := system.NewManager(cluster, db)
 
 	grpcServer := grpc.NewServer()
-	grpcServer.RegisterSystemServer(system)
+	grpcServer.RegisterSystemServer(systemServer)
 
 	httpServer := http.NewServer()
 	watchTower := watch.NewTower(cluster, db)
@@ -155,6 +165,8 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 		log.Info("Gracefully shutting down ...")
 		grpcServer.Stop()
 		httpServer.Shutdown()
+
+		systemManager.Shutdown()
 		watchTower.Shutdown()
 	}()
 
@@ -162,8 +174,14 @@ func (s *server) Run(cmd *cobra.Command, args []string) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
 		watchTower.Watch()
+	}()
+
+	// System Manager
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		systemManager.Run()
 	}()
 
 	// HTTP server

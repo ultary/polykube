@@ -7,8 +7,8 @@ import (
 	istio "istio.io/client-go/pkg/apis/networking/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/ultary/monokube/kluster/pkg/apps"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/apps"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
 )
 
 type Gateway struct {
@@ -18,7 +18,7 @@ type Gateway struct {
 
 func NewGateway(manifests apps.Manifests) *Gateway {
 
-	const name = "monokube"
+	const name = "polykube"
 
 	var retval Gateway
 

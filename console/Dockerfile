@@ -33,11 +33,11 @@ RUN apt-get update -y  \
 
 
 FROM base AS release
-LABEL repository="https://github.com/ultary/monokube"
+LABEL repository="https://github.com/ultary/polykube"
 
-CMD ["hypercorn", "--bind", "0.0.0.0:8000", "monokube.asgi:application"]
+CMD ["hypercorn", "--bind", "0.0.0.0:8000", "polykube.asgi:application"]
 
-ENV DJANGO_SETTINGS_MODULE=monokube.settings \
+ENV DJANGO_SETTINGS_MODULE=polykube.settings \
     PYTHONDONTWRITEBYTECODE=0
 EXPOSE 8000
 VOLUME /app/static
@@ -46,6 +46,6 @@ COPY --from=deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.
 COPY --from=deps /usr/local/bin/hypercorn /usr/local/bin/hypercorn
 COPY --from=builder /app/api       /app/api
 COPY --from=builder /app/apps      /app/apps
-COPY --from=builder /app/monokube  /app/monokube
+COPY --from=builder /app/polykube  /app/polykube
 COPY --from=builder /app/templates /app/templates
 COPY --from=builder /tmp/static    /app/static

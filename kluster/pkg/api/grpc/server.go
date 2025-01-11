@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
-	"github.com/ultary/monokube/kluster/api/grpc/v1"
+	"github.com/ultary/polykube/kluster/api/grpc/v1"
 )
 
 type Server struct {

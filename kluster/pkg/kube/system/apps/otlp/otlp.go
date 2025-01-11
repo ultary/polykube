@@ -9,8 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/yaml"
 
-	"github.com/ultary/monokube/kluster/pkg/helm"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/helm"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
 )
 
 //go:embed helm/*

@@ -1,6 +1,6 @@
 networks:
   default:
-    name: monokube
+    name: polykube
     driver: bridge
 services:
   kluster:
@@ -8,9 +8,9 @@ services:
       context: ./kluster
       dockerfile: Dockerfile
       target: release
-    container_name: monokube-server
+    container_name: polykube-server
     command:
-      - monokube
+      - polykube
       - serve
     expose:
       - 9090
@@ -27,10 +27,10 @@ services:
       context: ./console
       dockerfile: Dockerfile
       target: release
-    container_name: monokube-console
+    container_name: polykube-console
     environment:
-      MONOKUBE_GRPC_HOST: kluster
-      MONOKUBE_GRPC_PORT: 50051
+      polykube_GRPC_HOST: kluster
+      polykube_GRPC_PORT: 50051
       PG_HOST: host.docker.internal
     expose:
       - 8000
@@ -39,7 +39,7 @@ services:
     volumes:
       - static:/app/static:ro
   nginx:
-    container_name: monokube-nginx
+    container_name: polykube-nginx
     depends_on:
       - console
     image: nginx:1.27.0-alpine

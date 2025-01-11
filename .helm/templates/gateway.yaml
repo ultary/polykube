@@ -1,11 +1,11 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: monokube
+  name: polykube
   labels:
     org: home
 spec:
-  secretName: monokube-https-tls
+  secretName: polykube-https-tls
   dnsNames:
     - kafka.{{ .Values.domains.root }}
     - minio.{{ .Values.domains.root }}
@@ -16,7 +16,7 @@ spec:
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: monokube
+  name: polykube
   annotations:
     external-dns.kubernetes.io/private: 'true'
     #external-dns.kubernetes.io/public: 'true'
@@ -43,6 +43,6 @@ spec:
         number: 443
         protocol: HTTPS
       tls:
-        credentialName: monokube-https-tls
+        credentialName: polykube-https-tls
         mode: SIMPLE
 ---

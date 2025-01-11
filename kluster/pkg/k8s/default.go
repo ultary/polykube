@@ -19,7 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 
-	"github.com/ultary/monokube/kluster/pkg/db/models"
+	"github.com/ultary/polykube/kluster/pkg/db/models"
 )
 
 ////////////////////////////////////////////////////////////////

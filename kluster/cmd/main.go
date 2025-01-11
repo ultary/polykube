@@ -14,7 +14,7 @@ func main() {
 	appName := os.Args[0]
 	rootCmd := &cobra.Command{
 		Use:   appName,
-		Short: "Monokube's kluster CLI application",
+		Short: "polykube's kluster CLI application",
 	}
 
 	incluster := false

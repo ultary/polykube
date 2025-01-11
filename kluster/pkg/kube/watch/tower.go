@@ -10,9 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/ultary/monokube/kluster/pkg/db/models"
-	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/k8s/ext"
+	"github.com/ultary/polykube/kluster/pkg/db/models"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/k8s/ext"
 )
 
 type startFunc func(<-chan struct{})

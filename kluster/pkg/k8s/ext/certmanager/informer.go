@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
-	"github.com/ultary/monokube/kluster/pkg/k8s/ext"
+	"github.com/ultary/polykube/kluster/pkg/k8s/ext"
 )
 
 type Informer struct {

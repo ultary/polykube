@@ -9,8 +9,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
-	"github.com/ultary/monokube/kluster/pkg/k8s"
-	"github.com/ultary/monokube/kluster/pkg/utils"
+	"github.com/ultary/polykube/kluster/pkg/k8s"
+	"github.com/ultary/polykube/kluster/pkg/utils"
 )
 
 type MinIO struct {

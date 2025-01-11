@@ -1,6 +1,6 @@
-package kube
+package platform
 
-import "github.com/ultary/monokube/kluster/pkg/k8s"
+import "github.com/ultary/polykube/kluster/pkg/k8s"
 
 type platform struct {
 	client *k8s.Client
