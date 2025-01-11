@@ -7,9 +7,9 @@
 # brew update
 # brew install protobuf
 # brew upgrade protobuf
-# go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.1
-# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.4.0
-# go install github.com/wasilibs/go-protoc-gen-grpc/cmd/protoc-gen-grpc_python@v1.64.2
+# go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.2
+# go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
+# go install github.com/wasilibs/go-protoc-gen-grpc/cmd/protoc-gen-grpc_python@v1.69.0
 
 protoc \
   --proto_path ./kluster \
